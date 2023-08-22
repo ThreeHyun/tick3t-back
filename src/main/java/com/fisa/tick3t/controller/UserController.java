@@ -1,10 +1,10 @@
 package com.fisa.tick3t.controller;
 
 
-import com.fisa.tick3t.domain.dto.ResponseDto;
+import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.domain.vo.User;
-import com.fisa.tick3t.global.ResponseCode;
+import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,18 +17,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseDto<?> signup(@RequestBody User user) {
-        System.out.println(user.toString());
-        try {
-            int result = userService.signUpService(user);
-            if (result == 1) {
-                return new ResponseDto<>(ResponseCode.SUCCESS, user.getUserEmail());
-            } else {
-                return new ResponseDto<>(ResponseCode.FAIL, null);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_BODY, null);
-        }
+        return userService.signUp(user);
     }
 
     @GetMapping("/select/{id}")
@@ -47,6 +36,4 @@ public class UserController {
             return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_BODY, null);
         }
     }
-
-
 }
