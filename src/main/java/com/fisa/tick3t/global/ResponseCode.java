@@ -5,11 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @JsonFormat
-@AllAgrgsConstructor
 @Getter
+@AllArgsConstructor
 public enum ResponseCode {
     SUCCESS("0000", "성공적으로 처리되었습니다."),
     MISSING_OR_INVALID_PARAM("0022", "필수 파라미터 값 누락 또는 유효하지 않은 파라미터 값입니다."),
+    MISSING_OR_INVALID_BODY("0023", "데이터 부족"),
     INVALID_USER("1111", "유효하지 않은 사용자입니다."),
     LOGGED_OUT_USER("1112", "로그아웃된 사용자입니다."),
     WITHDRAWN_USER("1113", "탈퇴한 사용자입니다."),
