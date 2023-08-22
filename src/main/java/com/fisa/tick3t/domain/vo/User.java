@@ -16,8 +16,8 @@ public class User {
     private final String userBirth;
     private final String userEmail;
     private final String userPwd;
-    private final int fanId;
-    private final int fanCd;
+    private final String fanId;
+    private final String fanCd;
     private final Date createDtm;
     private final char userStatusCd;
 

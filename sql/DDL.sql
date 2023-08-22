@@ -26,8 +26,8 @@ CREATE TABLE TCK_USER_M
     user_birth     date         NULL,
     user_email     varchar(100) NULL,
     user_pwd       varchar(100) NULL,
-    fan_id         int          NULL DEFAULT 0 COMMENT '8글자',
-    fan_cd         int          NULL DEFAULT 0,
+    fan_id         varchar(8)          NULL DEFAULT '0' COMMENT '8글자',
+    fan_cd         varchar(8)          NULL DEFAULT '0',
     create_dtm     datetime     NULL DEFAULT NOW(),
     user_status_cd char(1)      NULL DEFAULT 'E' COMMENT '사용자 상태(E: 활성, D: 탈퇴)'
 );
