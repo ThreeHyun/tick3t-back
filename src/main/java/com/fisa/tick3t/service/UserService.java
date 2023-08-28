@@ -1,5 +1,7 @@
 package com.fisa.tick3t.service;
 
+import com.fisa.tick3t.domain.dto.PasswordDto;
+import com.fisa.tick3t.domain.dto.ProfileDto;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.domain.vo.User;
@@ -7,37 +9,202 @@ import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UtilFunction util;
+
+    // 2.1 [signup] 회원가입
+    @Transactional
+    public ResponseDto<ResponseCode> signUp(User user) {
+        ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
+        String userPwd = user.getUserPwd();
+        String userEmail = user.getEmail();
+        // 파라미터 완전성 검사
+        if (userPwd == null || userEmail == null || user.getName() == null) {
+            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_PARAM);
+            return responseDto;
+        }
+        // 파라미터 유효성 검사
+        if (!util.isValidPassword(userPwd) || !util.isValidEmail(userEmail) || user.getName().length() > 5) {
+            responseDto.setCode(ResponseCode.INVALID_DATA);
+            return responseDto;
+        }
+
+        // 중복된 이메일일 경우
+        if (userRepository.checkEmail(userEmail) != null) {
+            responseDto.setCode(ResponseCode.EMAIL_ALREADY_IN_USE);
+            return responseDto;
+        }
+
+        // password를 hashing하고 UserDto에 저장
+        UserDto userDto = new UserDto(user, util.hashPassword(userPwd));
+
+        // userDb에 Insert
+        try {
+            userRepository.insertUser(userDto);
+            responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+
+    }
+
+
+    // 2.4 [reissue] 비밀번호 재발급
+    @Transactional
+    public ResponseDto<ResponseCode> resetPassword(User user) {
+        ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
+        String userBirth = user.getBirth();
+        String userName = user.getName();
+        String userEmail = user.getEmail();
+
+        // 파라미터 완전성 검사
+        if (userEmail == null || userName == null || userBirth == null) {
+            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_PARAM);
+            return responseDto;
+        }
+        try {
+            //파라미터 유효성 검사
+            Integer userId = userRepository.checkUser(user);
+
+            // ID를 받아오지 못했다면 일치하지 않는 유저 정보 반환
+            if (userId == null) {
+                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
+                return responseDto;
+            }
+
+            // 새 패스워드 생성, 해싱, Update
+            String password = util.generatePassword();
+            PasswordDto passwordDto = new PasswordDto(userId, util.hashPassword(password));
+            userRepository.updatePassword(passwordDto);
+            // 메일링하기 --------------------------------------
+            responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+    }
+
+    // 4.1 [profile] 회원 내정보 조회
+    public ResponseDto<ProfileDto> profile(int userId) {
+        ResponseDto<ProfileDto> responseDto = new ResponseDto<>();
+        try {
+            ProfileDto profileDto = userRepository.selectProfile(userId);
+            if (profileDto == null) {
+                responseDto.setCode(ResponseCode.NON_EXISTENT_USER);
+                return responseDto;
+            }
+            profileDto.setEmail(util.emailMasking(profileDto.getEmail()));
+            profileDto.setName(util.nameMasking(profileDto.getName()));
+            responseDto.setCode(ResponseCode.SUCCESS);
+            responseDto.setData(profileDto);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+    }
+
+    // 4.2 [profile/password] 회원 비밀번호 변경
+    @Transactional
+    public ResponseDto<ResponseCode> changePassword(int userId, PasswordDto passwordDto) {
+        ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
+        String newPwd = passwordDto.getNewPassword();
+        String oldPwd = passwordDto.getOldPassword();
+        // // 파라미터 완전성, 유효성 검사
+        if (newPwd.equals(oldPwd) || !newPwd.equals(passwordDto.getNewPasswordCheck()) || !util.isValidPassword(newPwd)) {
+            responseDto.setCode(ResponseCode.INVALID_DATA);
+            return responseDto;
+        }
+        try {
+            //db에서 유저 ID로 UserDto 가져오기
+            UserDto userDto = userRepository.selectUser(userId);
+            System.out.println(userDto.toString());
+
+            //비밀번호 체킹
+            if (!util.checkPassword(oldPwd, userDto.getUserPwd())) {
+                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
+                return responseDto;
+            }
+
+            // 일치한다면 새 비밀번호 해싱
+            passwordDto.setNewPassword(util.hashPassword(newPwd));
+            passwordDto.setUserId(userId);
+            // 해싱한 비밀번호 DB에 저장
+            userRepository.updatePassword(passwordDto);
+            responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+    }
+
+
+    // 4.3 [profile/fanid] 회원 팬클럽 인증 번호 변경
+    @Transactional
+    public ResponseDto<ResponseCode> changeFanId(int userId, String fanId) {
+        ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
+
+        // 파라미터 완전성, 유효성 검사
+        if (fanId.length() != 8) {
+            responseDto.setCode(ResponseCode.INVALID_DATA);
+            return responseDto;
+        }
+
+        try {
+            //받아온 fanID가 중복되지 않는지 검증
+            if (userRepository.checkFanId(fanId) != null) {
+                responseDto.setCode(ResponseCode.INVALID_FAN_ID);
+                return responseDto;
+            }
+            //중복되지 않으면 업데이트
+            UserDto userDto = new UserDto(userId, fanId);
+            responseDto.setCode(ResponseCode.SUCCESS);
+            userRepository.updateFanId(userDto);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+    }
+
 
     @Transactional
-    public ResponseDto<?> signUp(User user) {
-        if (UtilFunction.isValidPassword(user.getUserPwd()) && UtilFunction.isValidEmail(user.getUserEmail())) {
-            if (userRepository.checkEmail(user.getUserEmail()) == 0) {
-                String password = UtilFunction.hashPassword(user.getUserPwd());
-                UserDto userDto = new UserDto(user.getUserName(), user.getUserBirth(), user.getUserEmail(), password, user.getFanCd());
-                try {
-                    userRepository.insertUser(userDto);
-                    return new ResponseDto<>(ResponseCode.SUCCESS, null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new ResponseDto<>(ResponseCode.FAIL, null);
-                }
-            } else {
-                return new ResponseDto<>(ResponseCode.EMAIL_ALREADY_IN_USE,null);
+    public ResponseDto<?> withdraw(int userId, String password) {
+        ResponseDto<Object> responseDto = new ResponseDto<>();
+        try {
+            // 유저 비밀번호 받아오기
+            UserDto userDto = userRepository.selectUser(userId);
+
+            // 비밀번호 체크하기
+            if (!util.checkPassword(password, userDto.getUserPwd()) ) {
+                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
+                return responseDto;
             }
-        } else {
-            return new ResponseDto<>(ResponseCode.INVALID_DATA, null);
+            if(userDto.getStatusCd().equals("D")){
+                responseDto.setCode(ResponseCode.WITHDRAWN_USER);
+                return responseDto;
+            }
+            // 같으면 삭제시킵니다.
+            userRepository.withdraw(userId);
+            responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
         }
+        return responseDto;
     }
 
-    public UserDto selectService(int id) {
-        return userRepository.selectUser(id);
-    }
 }

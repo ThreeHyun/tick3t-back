@@ -1,5 +1,6 @@
 package com.fisa.tick3t.response;
 
+import com.fisa.tick3t.domain.dto.PageInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
