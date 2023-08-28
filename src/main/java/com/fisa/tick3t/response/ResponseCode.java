@@ -17,6 +17,7 @@ public enum ResponseCode {
     WITHDRAWN_USER("1113", "탈퇴한 사용자입니다."),
     UNAUTHORIZED_USER("1114", "권한이 없는 사용자입니다."),
     MISMATCHED_USER_INFO("1115", "사용자 정보가 일치하지 않습니다."),
+    INVALID_TOKEN("1116", "유효하지 않은 토큰입니다."),
     EMAIL_ALREADY_IN_USE("2121", "이미 사용중인 이메일 주소입니다."),
     UNKNOWN_EMAIL("2421", "가입되지 않은 이메일 주소입니다."),
     INVALID_FAN_ID("4323", "유효하지 않은 팬클럽 회원 번호입니다."),
@@ -26,8 +27,9 @@ public enum ResponseCode {
     NON_EXISTENT_FANDOM("5421", "해당하는 팬덤이 존재하지 않습니다."),
     NON_EXISTENT_TICKETING("5621", "해당하는 티켓팅이 존재하지 않습니다."),
     NON_EXISTENT_RESERVATION("6421", "해당하는 예매 정보가 존재하지 않습니다."),
+    JWT_ERROR("8888", "JWT 에러입니다. 토큰문제임" ),
     FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요");
 
-    private final String code;
+    private final String resultCode;
     private final String message;
 }

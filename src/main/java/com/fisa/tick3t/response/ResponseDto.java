@@ -5,18 +5,20 @@ import lombok.*;
 import org.springframework.lang.Nullable;
 
 @Getter
-@AllArgsConstructor
+@Setter
+@NoArgsConstructor
 @JsonSerialize(using = ResponseDtoSerializer.class)
 public class ResponseDto<GenericWrapper> {
-    private final String code;
-    private final String message;
+    private ResponseCode code;
     @Nullable
-    private final GenericWrapper data;
+    private GenericWrapper data;
 
     public ResponseDto(ResponseCode responseCode, GenericWrapper data){
-        this.code = responseCode.getCode();
-        this.message = responseCode.getMessage();
+        this.code = responseCode;
         this.data = data;
     }
 
+    public ResponseDto(ResponseCode responseCode) {
+        this.code = responseCode;
+    }
 }

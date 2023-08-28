@@ -10,8 +10,8 @@ public class ResponseDtoSerializer extends JsonSerializer<ResponseDto<?>> {
     @Override
     public void serialize(ResponseDto<?> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeStartObject(); //{
-        gen.writeStringField("code", value.getCode()); // "code" : "0000"
-        gen.writeStringField("message", value.getMessage()); // "message" : "success"
+        gen.writeStringField("code", value.getCode().getResultCode()); // "code" : "0000"
+        gen.writeStringField("message", value.getCode().getMessage()); // "message" : "success"
 
         if (value.getData() == null) {
 //            null일 경우에도 안전히 {}로 내려가도록..

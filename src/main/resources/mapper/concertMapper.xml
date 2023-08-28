@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisa.tick3t.repository.ConcertRepository">
+
+    <!-- 3.1 [concert] 공연 목록 조회 -->
+    <select id="selectConcerts" parameterType="PageInfo" resultType="ConcertDto">
+        SELECT
+            cm.concert_id as concertId,
+            cm.cncr_title as title,
+            cm.cncr_dtm as date,
+            hm.hall_loc as location
+        FROM
+            TCK_CONCERT_M cm
+                JOIN
+            TCK_HALL_M hm ON cm.hall_id = hm.hall_id
+        ORDER BY
+            ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="selectConcertsNum" resultType="int">
+        SELECT count(*) as totalElement
+        FROM TCK_CONCERT_M
+    </select>
+
+
+
+
+    <!-- 3.2 [concert/{ID}] 공연 상세 조회 -->
+    <select id="selectConcert" parameterType="int" resultType="ConcertDto">
+        SELECT
+            cm.concert_id as concertId,
+            cm.cncr_title as title,
+            cm.cncr_dtm as date,
+            cm.cncr_start_dtm as startDate,
+            hm.hall_loc as location
+        FROM
+            TCK_CONCERT_M cm
+                JOIN
+            TCK_HALL_M hm ON cm.hall_id = hm.hall_id
+        WHERE concert_id = #{concertId}
+    </select>
+
+
+    <!-- 5.5 [admin/ticket] 공연 title 조회 -->
+    <select id="selectConcertTitle" parameterType="String" resultType="ConcertDto">
+        SELECT concert_id, cncr_title as title
+        FROM TCK_CONCERT_M
+        WHERE cncr_dtm BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 WEEK);
+    </select>
+
+    <select id="selectSeat" parameterType="int" resultType="SeatDto">
+        SELECT cm.cncr_price as price,
+               sm.grade_name as grade,
+               sm.seat_no as totalSeat
+        FROM TCK_CONCERT_M cm
+                JOIN
+             TCK_HALL_SEAT_M sm
+                 ON cm.hall_id = sm.hall_id
+        WHERE concert_id = #{id}
+    </select>
+</mapper>
+

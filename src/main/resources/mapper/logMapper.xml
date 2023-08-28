@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisa.tick3t.repository.LogRepository">
+
+    <!-- 5.3 [admin/log/{ID}] 사용자 Id로 로그 조회 -->
+    <select id="selectLog" parameterType="int" resultType="LogDto">
+        SELECT  log_id,
+                access_ip,
+                access_status_cd as statusCode,
+                create_dtm as createDate
+        FROM TCK_LOG_M
+        WHERE user_id = #{userId}
+        LIMIT 5 OFFSET #{offset}
+    </select>
+
+    <select id="selectLogNum" parameterType="int" resultType="int">
+        SELECT  count(*)
+        FROM TCK_LOG_M
+        WHERE user_id = #{id}
+    </select>
+</mapper>
