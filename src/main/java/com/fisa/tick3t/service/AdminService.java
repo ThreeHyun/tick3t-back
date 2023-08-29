@@ -83,9 +83,10 @@ public class AdminService {
     public ResponseDto<?> selectLog(int id, int page) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         PageInfo pageInfo = new PageInfo(page, 5);
+        pageInfo.setPageNo(id);
         try {
             pageInfo.setTotalElement(logRepository.selectLogNum(id));
-            ArrayList<LogDto> logDtos = logRepository.selectLog(id);
+            ArrayList<LogDto> logDtos = logRepository.selectLog(pageInfo);
             for(LogDto logDto : logDtos){
                 String statusCd = logDto.getStatusCode();
                 switch (statusCd) {
@@ -100,6 +101,7 @@ public class AdminService {
                         break;
                 }
             }
+            pageInfo.setPageNo(page);
             LogPageDto logPageDto = new LogPageDto(pageInfo, logDtos);
             responseDto.setData(logPageDto);
             responseDto.setCode(ResponseCode.SUCCESS);

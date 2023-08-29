@@ -3,7 +3,6 @@ package com.fisa.tick3t.service;
 import com.fisa.tick3t.domain.dto.TokenDto;
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.jwt.TokenProvider;
-import com.fisa.tick3t.response.GenericWrapper;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +27,7 @@ public class AuthService {
             UsernamePasswordAuthenticationToken authenticationToken = userDto.ToUser(userDto).toAuthentication();
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-            GenericWrapper<String> genericWrapper = new GenericWrapper<>("Authorization", tokenDto.authorization(tokenDto));
-            responseDto.setData(genericWrapper);
+            responseDto.setData(tokenDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch(AuthenticationException e) {
             log.error(e.getMessage());

@@ -18,6 +18,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Configuration
@@ -41,10 +42,13 @@ public class JwtConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterCh
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
 
                 String jwt = resolveToken(request);
+                Optional<String> validationError = tokenProvider.validateToken(jwt);
 
-                if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+                if (StringUtils.hasText(jwt) && validationError.isEmpty()) {
                     Authentication authentication = tokenProvider.getAuthentication(jwt);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                }else{
+                    request.setAttribute("INVALID_JWT", validationError.get());
                 }
 
                 filterChain.doFilter(request, response);

@@ -13,7 +13,4 @@ public class TokenDto {
     private String refreshToken;
     private Long accessTokenExpiresIn;
 
-    public String authorization(TokenDto tokenDto){
-        return tokenDto.grantType + " " + tokenDto.accessToken;
-    }
 }
