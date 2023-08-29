@@ -15,6 +15,7 @@ import java.util.Arrays;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin("http://localhost:3000/")
 @RequestMapping("/admin")
 public class AdminController {
 
@@ -42,14 +43,6 @@ public class AdminController {
         return adminService.selectLog(ID, page);
     }
 
-//    @GetMapping("/fan/{fanCd}") // O 근데 쿼리 개선해야할듯 db를 짱마니 갔다옴 ㅠㅠ
-//    public ResponseDto<?> selectFan(@PathVariable(required = false) String fanCd) {
-//        if(fanCd == null){
-//            fanCd = "default"; // 디폴트값인거 하나 정해놓기..?
-//        }
-//        return adminService.dashboardFan(fanCd);
-//    }
-
     @GetMapping("/fan/{fanCd}")
     public ResponseDto<?> selectFan(@PathVariable(required = false) String fanCd) {
         if(fanCd == null){
@@ -68,6 +61,4 @@ public class AdminController {
     public ResponseDto<?> selectConcertById(@PathVariable String ID) {
         return adminService.dashboardConcert();
     }
-
-
 }
