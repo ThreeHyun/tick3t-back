@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LogDto {
+    int rowNum;
     int logId;
     String accessIp;
     String createDate;

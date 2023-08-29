@@ -71,27 +71,35 @@
     <select id="selectUsers" parameterType="QueryStringDto" resultType="UserDto">
         <choose>
             <when test="category == null">
-                SELECT user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
+                SELECT row_number() over (ORDER BY create_dtm) as rowNum,
+                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
                 FROM TCK_USER_M
+                ORDER BY create_dtm
                 LIMIT 20 OFFSET #{offset}
             </when>
             <otherwise>
                 <if test="category != null and category == 'name'">
-                    SELECT user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
+                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
+                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
                     FROM TCK_USER_M
                     WHERE user_name LIKE CONCAT('%',#{word}, '%')
+                    ORDER BY create_dtm
                     LIMIT 20 OFFSET #{offset}
                 </if>
                 <if test="category != null and category == 'email'">
-                    SELECT user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
+                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
+                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
                     FROM TCK_USER_M
                     WHERE user_email LIKE CONCAT('%',#{word}, '%')
+                    ORDER BY create_dtm
                     LIMIT 20 OFFSET #{offset}
                 </if>
                 <if test="category != null and category == 'fanCd'">
-                    SELECT user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
+                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
+                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
                     FROM TCK_USER_M
                     WHERE fan_cd LIKE CONCAT('%',#{word}, '%')
+                    ORDER BY create_dtm
                     LIMIT 20 OFFSET #{offset}
                 </if>
             </otherwise>

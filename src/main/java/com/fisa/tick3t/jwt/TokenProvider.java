@@ -18,6 +18,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,11 +44,14 @@ public class TokenProvider {
 
         JwtUserDetails jwtUserDetails = (JwtUserDetails) authentication.getPrincipal();
         int userId = jwtUserDetails.getUserId();
+        boolean statusCd = jwtUserDetails.isAccountNonLocked();
+        // 여기서 받아서 만약에 탈퇴한 사용자라면 exception을 던집니다 . 그래서 거기서 반환합니다 에러를..
         long now = (new Date()).getTime();
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("userId", userId)
+                .claim("statusCd", statusCd)
                 .claim(AUTHORITIES_KEY, authorities)
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -81,6 +85,7 @@ public class TokenProvider {
 
         // 클레임에서 사용자 ID 가져오기
         int userId = (int) claims.get("userId");
+
         com.fisa.tick3t.domain.vo.User user = new User(userId, claims.getSubject(), "", "authorities");
 
         // UserDetails 객체를 만들어서 Authentication 리턴
@@ -89,22 +94,30 @@ public class TokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-    public boolean validateToken(String token) {
+//    public boolean validateToken(String token) {
+//        try {
+//            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+//            return true;
+//        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+//            log.info("잘못된 jwt 서명입니다.");
+//        } catch (ExpiredJwtException e) {
+//            log.info("만료된 jwt 토큰입니다.");
+//        } catch (UnsupportedJwtException e) {
+//            log.info("지원되지 않는 jwt 토큰입니다.");
+//        } catch (IllegalArgumentException e) {
+//            log.info("jwt 토큰이 잘못되었습니다.");
+//        }
+//        return false;
+//    }
+
+    public Optional<String> validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("잘못된 jwt 서명입니다.");
-        } catch (ExpiredJwtException e) {
-            log.info("만료된 jwt 토큰입니다.");
-        } catch (UnsupportedJwtException e) {
-            log.info("지원되지 않는 jwt 토큰입니다.");
-        } catch (IllegalArgumentException e) {
-            log.info("jwt 토큰이 잘못되었습니다.");
+            return Optional.empty();
+        } catch (Exception e){
+            return Optional.of(e.getMessage());
         }
-        return false;
     }
-
     public ResponseCode validateTokenCode(String token){
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);

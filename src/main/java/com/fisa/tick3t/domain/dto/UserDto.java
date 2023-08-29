@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
 
+    int rowNum;
     int userId;
     String name;
     String birth;

@@ -6,6 +6,7 @@
     <!-- 3.1 [concert] 공연 목록 조회 -->
     <select id="selectConcerts" parameterType="PageInfo" resultType="ConcertDto">
         SELECT
+            ROW_NUMBER() OVER (ORDER BY ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))) AS rowNum,
             cm.concert_id as concertId,
             cm.cncr_title as title,
             cm.cncr_dtm as date,
@@ -16,9 +17,9 @@
             TCK_HALL_M hm ON cm.hall_id = hm.hall_id
         ORDER BY
             ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))
-        LIMIT #{pageSize} OFFSET #{offset}
+        LIMIT 5 OFFSET #{offset}
     </select>
-
+    <!--    todo : 위, 아래 쿼리를 합칠 방법을 고민해보기 -->
     <select id="selectConcertsNum" resultType="int">
         SELECT count(*) as totalElement
         FROM TCK_CONCERT_M

@@ -8,12 +8,12 @@ import org.springframework.lang.Nullable;
 @Setter
 @NoArgsConstructor
 @JsonSerialize(using = ResponseDtoSerializer.class)
-public class ResponseDto<GenericWrapper> {
+public class ResponseDto<D> {
     private ResponseCode code;
     @Nullable
-    private GenericWrapper data;
+    private D data;
 
-    public ResponseDto(ResponseCode responseCode, GenericWrapper data){
+    public ResponseDto(ResponseCode responseCode, D data){
         this.code = responseCode;
         this.data = data;
     }

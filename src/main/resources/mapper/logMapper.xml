@@ -4,13 +4,15 @@
 <mapper namespace="com.fisa.tick3t.repository.LogRepository">
 
     <!-- 5.3 [admin/log/{ID}] 사용자 Id로 로그 조회 -->
-    <select id="selectLog" parameterType="int" resultType="LogDto">
-        SELECT  log_id,
+    <select id="selectLog" parameterType="PageInfo" resultType="LogDto">
+        SELECT  row_number() over (ORDER BY create_dtm) as rowNum,
+                log_id,
                 access_ip,
                 access_status_cd as statusCode,
                 create_dtm as createDate
         FROM TCK_LOG_M
-        WHERE user_id = #{userId}
+        WHERE user_id = #{pageNo}
+        ORDER BY create_dtm
         LIMIT 5 OFFSET #{offset}
     </select>
 

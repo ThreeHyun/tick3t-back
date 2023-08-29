@@ -24,7 +24,6 @@ public class JwtUserDetails implements UserDetails {
 
         // 사용자의 역할을 가져와 GrantedAuthority 객체를 생성하고 리스트에 추가
         String role = user.getRole();
-        System.out.println(role);
         authorities.add(new SimpleGrantedAuthority(role));
 
         // 리스트 반환
