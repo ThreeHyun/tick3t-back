@@ -12,13 +12,13 @@ public class UserPageDto {
     private int pageSize;
     private int totalPage;
     private int totalElement;
-    private List<UserDto> users;
+    private List<UserDto> userList;
 
     public UserPageDto(PageInfo pageInfo, List<UserDto> users) {
         this.pageNo = pageInfo.getPageNo();
         this.pageSize = pageInfo.getPageSize();
         this.totalElement = pageInfo.getTotalElement();
         this.totalPage = totalElement / pageSize + 1;
-        this.users = users;
+        this.userList = users;
     }
 }
