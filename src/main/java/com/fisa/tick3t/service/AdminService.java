@@ -31,8 +31,10 @@ public class AdminService {
         queryStringDto.setOffset((queryStringDto.getPage()-1) * pageInfo.getPageSize() );
         try {
             pageInfo.setTotalElement(userRepository.selectUserNum());
-            List<UserDto> users = userRepository.selectUsers(queryStringDto);
-            for(UserDto user: users){
+          
+            List<UserDto> userList = userRepository.selectUsers(queryStringDto);
+            for(UserDto user: userList){
+
                 user.setName(util.nameMasking(user.getName()));
                 user.setEmail(util.emailMasking(user.getEmail()));
                 if(user.getStatusCd().equals("E")){
@@ -41,7 +43,7 @@ public class AdminService {
                     user.setStatusCd("비활성화");
                 }
             }
-            UserPageDto userPageDto = new UserPageDto(pageInfo, users);
+            UserPageDto userPageDto = new UserPageDto(pageInfo, userList);
             responseDto.setData(userPageDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {

@@ -130,8 +130,6 @@ public class UserService {
         try {
             //db에서 유저 ID로 UserDto 가져오기
             UserDto userDto = userRepository.selectUser(userId);
-            System.out.println(userDto.toString());
-
             //비밀번호 체킹
             if (!util.checkPassword(oldPwd, userDto.getUserPwd())) {
                 responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);

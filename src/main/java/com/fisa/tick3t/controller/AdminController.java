@@ -15,6 +15,7 @@ import java.util.Arrays;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin("http://localhost:3000/")
 @RequestMapping("/admin")
 public class AdminController {
 
@@ -60,6 +61,4 @@ public class AdminController {
     public ResponseDto<?> selectConcertById(@PathVariable String ID) {
         return adminService.dashboardConcert();
     }
-
-
 }
