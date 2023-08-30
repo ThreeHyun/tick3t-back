@@ -11,9 +11,8 @@ import com.fisa.tick3t.response.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,10 +28,10 @@ public class AdminService {
     public ResponseDto<?> selectUsers(QueryStringDto queryStringDto) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), 20);
-        queryStringDto.setOffset((queryStringDto.getPage()-1) * 20 );
+        queryStringDto.setOffset((queryStringDto.getPage()-1) * pageInfo.getPageSize() );
         try {
             pageInfo.setTotalElement(userRepository.selectUserNum());
-            ArrayList<UserDto> users = userRepository.selectUsers(queryStringDto);
+            List<UserDto> users = userRepository.selectUsers(queryStringDto);
             for(UserDto user: users){
                 user.setName(util.nameMasking(user.getName()));
                 user.setEmail(util.emailMasking(user.getEmail()));
@@ -83,10 +82,10 @@ public class AdminService {
     public ResponseDto<?> selectLog(int id, int page) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         PageInfo pageInfo = new PageInfo(page, 5);
-        pageInfo.setPageNo(id);
+        pageInfo.setUserId(id);
         try {
             pageInfo.setTotalElement(logRepository.selectLogNum(id));
-            ArrayList<LogDto> logDtos = logRepository.selectLog(pageInfo);
+            List<LogDto> logDtos = logRepository.selectLog(pageInfo);
             for(LogDto logDto : logDtos){
                 String statusCd = logDto.getStatusCode();
                 switch (statusCd) {
@@ -101,7 +100,6 @@ public class AdminService {
                         break;
                 }
             }
-            pageInfo.setPageNo(page);
             LogPageDto logPageDto = new LogPageDto(pageInfo, logDtos);
             responseDto.setData(logPageDto);
             responseDto.setCode(ResponseCode.SUCCESS);
@@ -112,7 +110,6 @@ public class AdminService {
         return responseDto;
     }
 
-    @Transactional
     public ResponseDto<?> dashboardFan(String fanCd) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
@@ -127,7 +124,6 @@ public class AdminService {
         return responseDto;
     }
 
-    @Transactional
     public ResponseDto<?> dashboardConcert() {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
