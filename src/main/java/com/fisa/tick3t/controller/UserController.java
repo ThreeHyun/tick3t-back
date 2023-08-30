@@ -42,7 +42,7 @@ public class UserController {
     public ResponseDto<?> changePwd(Authentication authentication, @RequestBody PasswordDto passwordDto) {
         int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
         return userService.changePassword(userId, passwordDto);
-    }
+    } // todo:비밀번호 변경 후 accesstoken 새로 발급하기
 
     @PostMapping("/profile/fanId") // O
     public ResponseDto<?> changeFanId(Authentication authentication, @RequestBody ProfileDto profileDto) {

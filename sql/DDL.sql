@@ -13,6 +13,10 @@ select * from TCK_USER_M;
 select * from TCK_CONCERT_M;
 select * from REFRESH_TOKEN_M;
 select * from TCK_LOG_M;
+select  * from CNCR_TICKET_M;
+select  * from TCK_HALL_M;
+select  * from  tck_hall_seat_m;
+
 
 DROP TABLE IF EXISTS TCK_USER_M;
 DROP TABLE IF EXISTS TCK_CONCERT_M;
@@ -158,4 +162,5 @@ ALTER TABLE TCK_LOG_M
         REFERENCES TCK_USER_M (
                                  user_id
             );
+
 
