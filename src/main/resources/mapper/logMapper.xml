@@ -11,9 +11,9 @@
                 access_status_cd as statusCode,
                 create_dtm as createDate
         FROM TCK_LOG_M
-        WHERE user_id = #{pageNo}
+        WHERE user_id = #{userId}
         ORDER BY create_dtm
-        LIMIT 5 OFFSET #{offset}
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <select id="selectLogNum" parameterType="int" resultType="int">

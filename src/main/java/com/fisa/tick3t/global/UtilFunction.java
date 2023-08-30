@@ -108,20 +108,17 @@ public class UtilFunction {
     }
 
     public QueryStringDto checkQuery(String category, String word, int page, ArrayList<String> categories, int pageSize) {
-        if (category == null || word == null) {
-            return new QueryStringDto(null, null, page, pageSize);
+        if (category != null & categories.contains(category)) {
+            category = category.trim();
         }
-        category = category.trim();
-        word = word.trim();
-        if (category.isEmpty() != word.isEmpty() || !categories.contains(category)) {
-            // 카테고리값이 null 이거나 word가 null이거나 or 카테고리값이 있거나 word값이 있거나 or 카테고리가 카테고리 안에 속하지 않거나
-            category = null;
-            word = null;
+        if(word != null){
+            word = word.trim();
         }
-        if (page == 0) {
+        if(page == 0){
             page = 1;
         }
-        return new QueryStringDto(category, word, page, pageSize);
+        int offset = (page -1) * pageSize;
+        return new QueryStringDto(category, word, page, offset);
     }
 
     public boolean check(String param){

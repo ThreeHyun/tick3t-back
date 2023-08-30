@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisa.tick3t.repository.OrderRepository">
+
+    <select id="selectOrders" parameterType="Map" resultType="OrderDto">
+        SELECT
+        row_number() over (ORDER BY resv_dtm) as rowNum,
+        TM.reservation_id as ticketId,
+        CM.cncr_title as title,
+        CM.cncr_dtm as datetime,
+        (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
+        TM.ticket_status_cd as payState
+        FROM CNCR_TICKET_M TM
+        JOIN TCK_CONCERT_M CM
+        on CM.concert_id = TM.concert_id
+        WHERE customer_id = #{userId}
+        <if test="queryStringDto.category != null and queryStringDto.category != '4'">
+            AND TM.ticket_status_cd = CONCAT(#{queryStringDto.category})
+        </if>
+        <if test="queryStringDto.word != null">
+            AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
+        </if>
+        ORDER BY resv_dtm
+        LIMIT 3 OFFSET #{queryStringDto.offset}
+    </select>
+
+
+    <select id="selectOrder" parameterType="Map" resultType="OrderDto">
+        SELECT
+        TM.reservation_id as ticketId,
+        CM.concert_id as concertId,
+        CM.cncr_title as title,
+        (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
+        CM.cncr_dtm as datetime,
+        TM.seat_no as seat,
+        CM.cncr_price as price,
+        CM.cncr_cancel_date as cancelDate
+        FROM CNCR_TICKET_M TM
+        JOIN TCK_CONCERT_M CM
+        on CM.concert_id = TM.concert_id
+        WHERE customer_id = #{userId} and CM.concert_id = #{concertId}
+    </select>
+
+    <update id="payOrder" parameterType="Map">
+        UPDATE CNCR_TICKET_M
+        SET ticket_status_cd = '1'
+        WHERE customer_id = #{userId}
+        AND reservation_id = #{ticketId}
+        AND ticket_status_cd = '0'
+    </update>
+
+
+    <select id="selectOrderNum" resultType="int">
+        SELECT count(*) as totalElement
+        FROM CNCR_TICKET_M
+    </select>
+</mapper>

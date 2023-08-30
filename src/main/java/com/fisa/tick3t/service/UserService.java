@@ -191,8 +191,17 @@ public class UserService {
                 responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
                 return responseDto;
             }
+
+            //탈퇴 상태 체크하기
             if(userDto.getStatusCd().equals("D")){
                 responseDto.setCode(ResponseCode.WITHDRAWN_USER);
+                return responseDto;
+            }
+
+            //예매 정보 체크하기
+            int orderNum = userRepository.checkOrder(userId);
+            if(orderNum != 0){
+                responseDto.setCode(ResponseCode.CANNOT_WITHDRAW);
                 return responseDto;
             }
             // 같으면 삭제시킵니다.

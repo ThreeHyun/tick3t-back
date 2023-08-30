@@ -10,7 +10,7 @@
     </appender>
 
 <!-- TRACE, DEBUG, INFO, WARN, ERROR 로그 레벨 변경 가능   -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
     </root>

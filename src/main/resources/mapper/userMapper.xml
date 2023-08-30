@@ -23,13 +23,15 @@
     <select id="checkUser" parameterType="User" resultType="int">
         SELECT user_id
         FROM TCK_USER_M
-        WHERE user_email = #{email} and user_name = #{name} and user_birth = #{birth}
+        WHERE user_email = #{email}
+          and user_name = #{name}
+          and user_birth = #{birth}
     </select>
 
     <!-- 4.1 [/profile] 유저의 회원 내정보 조회 -->
     <!-- password는 null로 set, name과 email은 마스킹처리 후 반환-->
     <select id="selectProfile" parameterType="int" resultType="ProfileDto">
-        SELECT user_name as name,
+        SELECT user_name  as name,
                user_email as email,
                user_birth as birth,
                user_pwd,
@@ -60,6 +62,21 @@
     </update>
 
     <!-- 4.4 [/profile/withdraw] 회원 탈퇴 처리 -->
+    <select id="checkOrder" parameterType="int" resultType="int">
+        SELECT count(*)
+        FROM CNCR_TICKET_M
+        WHERE customer_id = #{userId}
+          AND (
+                    ticket_status_cd = 0
+                OR (
+                                ticket_status_cd = 1
+                            AND now() > (SELECT cncr_dtm
+                                         FROM TCK_CONCERT_M
+                                         WHERE CNCR_TICKET_M.concert_id = TCK_CONCERT_M.concert_id)
+                        )
+            )
+    </select>
+
     <update id="withdraw" parameterType="int">
         UPDATE TCK_USER_M
         SET user_status_cd = 'D'
@@ -69,41 +86,21 @@
 
     <!-- 5.1 [/admin/user] 어드민이 사용자 전체조회 혹은 카테고리로 검색 조회할 때 사용 -->
     <select id="selectUsers" parameterType="QueryStringDto" resultType="UserDto">
-        <choose>
-            <when test="category == null">
-                SELECT row_number() over (ORDER BY create_dtm) as rowNum,
-                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
-                FROM TCK_USER_M
-                ORDER BY create_dtm
-                LIMIT 20 OFFSET #{offset}
-            </when>
-            <otherwise>
-                <if test="category != null and category == 'name'">
-                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
-                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
-                    FROM TCK_USER_M
-                    WHERE user_name LIKE CONCAT('%',#{word}, '%')
-                    ORDER BY create_dtm
-                    LIMIT 20 OFFSET #{offset}
-                </if>
-                <if test="category != null and category == 'email'">
-                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
-                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
-                    FROM TCK_USER_M
-                    WHERE user_email LIKE CONCAT('%',#{word}, '%')
-                    ORDER BY create_dtm
-                    LIMIT 20 OFFSET #{offset}
-                </if>
-                <if test="category != null and category == 'fanCd'">
-                    SELECT row_number() over (ORDER BY create_dtm) as rowNum,
-                    user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
-                    FROM TCK_USER_M
-                    WHERE fan_cd LIKE CONCAT('%',#{word}, '%')
-                    ORDER BY create_dtm
-                    LIMIT 20 OFFSET #{offset}
-                </if>
-            </otherwise>
-        </choose>
+        SELECT row_number() over (ORDER BY create_dtm) as rowNum,
+        user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
+        FROM TCK_USER_M
+        <if test="category == null"/>
+        <if test="category == 'name'">
+            WHERE user_name LIKE CONCAT('%',#{word}, '%')
+        </if>
+        <if test="category == 'email'">
+            WHERE user_email LIKE CONCAT('%',#{word}, '%')
+        </if>
+        <if test="category == 'fanCd'">
+            WHERE fan_cd LIKE CONCAT('%',#{word}, '%')
+        </if>
+        ORDER BY create_dtm
+        LIMIT 20 OFFSET #{offset}
     </select>
 
     <select id="selectUserNum" resultType="int">
