@@ -2,6 +2,7 @@ package com.fisa.tick3t.controller;
 
 import com.fisa.tick3t.domain.dto.OrderDto;
 import com.fisa.tick3t.domain.dto.QueryStringDto;
+import com.fisa.tick3t.domain.dto.ReservationDto;
 import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.jwt.JwtUserDetails;
 import com.fisa.tick3t.response.ResponseDto;
@@ -46,5 +47,24 @@ public class OrderController {
         int ticketId = orderDto.getTicketId();
         return orderService.payOrder(userId, ticketId);
     }
+
+    @PostMapping("/myorder/cancel")
+    public ResponseDto<?> cancleOrder(Authentication authentication, @RequestBody OrderDto orderDto){
+        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+        int ticketId = orderDto.getTicketId();
+        return orderService.cancelOrder(userId, ticketId);
+    }
+
+    @GetMapping("/order/check/{ID}")
+    public ResponseDto<?> checkOrder(Authentication authentication, @PathVariable int ID){
+        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+        return orderService.checkOrder(userId, ID);
+    }
+
+    @PostMapping("/order")
+    public ResponseDto<?> test(@RequestBody ReservationDto reservationDto){
+        return orderService.selectSeat(reservationDto);
+    }
+
 
 }
