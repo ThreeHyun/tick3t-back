@@ -9,8 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ResponseCode {
     SUCCESS("0000", "성공적으로 처리되었습니다."),
-    MISSING_OR_INVALID_PARAM("0022", "필수 파라미터 값 누락 또는 유효하지 않은 파라미터 값입니다."),
-    MISSING_OR_INVALID_BODY("0023", "입력 데이터가 부족합니다."),
+    MISSING_OR_INVALID_REQUEST("0022", "필수 파라미터 값 누락 또는 유효하지 않은 파라미터 값입니다."),
+    // todo: 이 에러가 발생할 경우 log.debug()를 사용해서 파라미터 정보를 담아줍니다.
     INVALID_DATA("0024", "유효하지 않은 형식의 데이터입니다."),
     INVALID_USER("1111", "유효하지 않은 사용자입니다."),
     LOGGED_OUT_USER("1112", "로그아웃된 사용자입니다."),
@@ -25,8 +25,10 @@ public enum ResponseCode {
     NON_EXISTENT_USER("5221", "해당하는 사용자가 존재하지 않습니다."),
     NON_EXISTENT_CONCERT("3221", "해당하는 공연이 존재하지 않습니다."),
     NON_EXISTENT_FANDOM("5421", "해당하는 팬덤이 존재하지 않습니다."),
-    NON_EXISTENT_TICKETING("5621", "해당하는 티켓팅이 존재하지 않습니다."),
-    NON_EXISTENT_RESERVATION("6421", "해당하는 예매 정보가 존재하지 않습니다."),
+    NOT_CONCERT_START_TIME("6001", "공연 예매 시작 시간이 아닙니다."),
+    UNAUTHORIZED_FAN("6002", "팬클럽 인증을 받지 못한 경우 예매할 수 없습니다."),
+    EXCEED_TICKET_LIMIT("6003", "1인 1매만 예매 가능합니다."),
+    NON_EXISTENT_RESERVATION("6421", "잔여석이 존재하지 않습니다."),
     JWT_ERROR("8888", "JWT 에러입니다. 토큰문제임" ),
     FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요");
 
