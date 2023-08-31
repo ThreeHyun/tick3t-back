@@ -2,6 +2,7 @@ package com.fisa.tick3t.repository;
 
 import com.fisa.tick3t.domain.dto.OrderDto;
 import com.fisa.tick3t.domain.dto.QueryStringDto;
+import com.fisa.tick3t.domain.dto.ReservationDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -18,5 +19,13 @@ public interface OrderRepository {
 
     void payOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
 
-    int selectOrderNum();
+    int selectOrderNum(int userId);
+
+    void selectSeat(ReservationDto ReservationDto);
+
+    void cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+
+    int checkReservation(int userId, int ticketId);
+
+    int checkFanCd(int userId, int ticketId);
 }

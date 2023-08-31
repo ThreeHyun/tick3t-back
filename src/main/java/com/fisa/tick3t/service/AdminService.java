@@ -119,6 +119,10 @@ public class AdminService {
         try {
             FanCountDto fanCountDto = userRepository.selectFanSum(fanCd);
             fanCountDto.setNowUser(fanCountDto.getJoinUser() - fanCountDto.getWithdrawUser());
+            if(fanCountDto.getJoinUser() == 0){
+                responseDto.setCode(ResponseCode.NON_EXISTENT_FANDOM);
+                return responseDto;
+            }
             responseDto.setData(fanCountDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {

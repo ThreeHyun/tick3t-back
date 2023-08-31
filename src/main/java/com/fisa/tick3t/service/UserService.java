@@ -29,7 +29,7 @@ public class UserService {
         String userEmail = user.getEmail();
         // 파라미터 완전성 검사
         if (userPwd == null || userEmail == null || user.getName() == null) {
-            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_PARAM);
+            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
             return responseDto;
         }
         // 파라미터 유효성 검사
@@ -70,7 +70,7 @@ public class UserService {
 
         // 파라미터 완전성 검사
         if (userEmail == null || userName == null || userBirth == null) {
-            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_PARAM);
+            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
             return responseDto;
         }
         try {
@@ -87,7 +87,7 @@ public class UserService {
             String password = util.generatePassword();
             PasswordDto passwordDto = new PasswordDto(userId, util.hashPassword(password));
             userRepository.updatePassword(passwordDto);
-            // 메일링하기 --------------------------------------
+            // todo: 메일링처리
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -190,6 +190,7 @@ public class UserService {
             if (!util.checkPassword(password, userDto.getUserPwd()) ) {
                 responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
                 return responseDto;
+                // todo: throw new customException(코드); + customExceptionHandler 만들기
             }
 
             //탈퇴 상태 체크하기
