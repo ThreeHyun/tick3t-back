@@ -9,7 +9,7 @@
                 log_id,
                 access_ip,
                 access_status_cd as statusCode,
-                create_dtm as createDate
+                create_dtm as logCreateDate
         FROM TCK_LOG_M
         WHERE user_id = #{userId}
         ORDER BY create_dtm

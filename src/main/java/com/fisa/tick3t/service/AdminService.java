@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -88,6 +89,7 @@ public class AdminService {
         try {
             pageInfo.setTotalElement(logRepository.selectLogNum(id));
             List<LogDto> logDtos = logRepository.selectLog(pageInfo);
+            log.debug("logDto : " +  Arrays.toString(logDtos.toArray()));
             for(LogDto logDto : logDtos){
                 String statusCd = logDto.getStatusCode();
                 switch (statusCd) {

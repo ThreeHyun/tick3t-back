@@ -40,8 +40,8 @@ public class SecurityConfig extends WebMvcConfigurationSupport {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 //.antMatchers("/profile/**", "/myorder/**")
-                //.antMatchers("/profile/**", "/myorder/**", "/admin/**")
-                //.access("hasRole('ROLE_USER')")
+                .antMatchers("/profile/**", "/myorder/**", "/admin/**")
+                .access("hasRole('ROLE_USER')")
                 //.antMatchers("/admin/**")
                 //.access("hasRole('ROLE_ADMIN')")
                 .anyRequest().permitAll();
