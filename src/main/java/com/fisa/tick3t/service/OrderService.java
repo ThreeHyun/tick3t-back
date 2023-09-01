@@ -59,7 +59,7 @@ public class OrderService {
         ResponseDto<OrderDto> responseDto = new ResponseDto<>();
         try {
             OrderDto orderDto = orderRepository.selectOrder(userId, ticketId);
-            if(orderDto == null){
+            if (orderDto == null) {
                 responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
                 return responseDto;
             }
@@ -86,12 +86,12 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseDto<?> cancelOrder(int userId, int ticketId){
+    public ResponseDto<?> cancelOrder(int userId, int ticketId) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             orderRepository.cancelOrder(userId, ticketId);
             responseDto.setCode(ResponseCode.SUCCESS);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }
@@ -99,26 +99,27 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseDto<?> selectSeat(ReservationDto reservationDto){
+    public ResponseDto<?> selectSeat(int userId, ReservationDto reservationDto) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
+        reservationDto.setUserId(userId);
         try {
             orderRepository.selectSeat(reservationDto);
             responseDto.setCode(ResponseCode.SUCCESS);
-        }catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             // 잔여석이 존재하지 않을 경우 에러 반환
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
-        }catch (DataAccessException e){
+        } catch (DataAccessException e) {
             // 팬클럽이 아니라거나 이미 예매 내역이 있을 경우
-            if(e.getCause() instanceof SQLException){
+            if (e.getCause() instanceof SQLException) {
                 log.error(e.getMessage());
                 responseDto.setCode(ResponseCode.INVALID_FAN_ID);
                 return responseDto;
-            } else{
+            } else {
                 log.error(e.getMessage());
                 responseDto.setCode(ResponseCode.FAIL);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }
@@ -131,19 +132,19 @@ public class OrderService {
             int result = orderRepository.checkReservation(userId, ticketId);
             System.out.println(result);
             // 이미 예매했을 경우
-            if(result == 1){
+            if (result == 1) {
                 responseDto.setCode(ResponseCode.EXCEED_TICKET_LIMIT);
                 return responseDto;
             }
             result = orderRepository.checkFanCd(userId, ticketId);
 
             // 팬클럽 아닐 경우
-            if(result != 1){
+            if (result != 1) {
                 responseDto.setCode(ResponseCode.UNAUTHORIZED_FAN);
                 return responseDto;
             }
             responseDto.setCode(ResponseCode.SUCCESS);
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }
