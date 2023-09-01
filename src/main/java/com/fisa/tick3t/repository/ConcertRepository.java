@@ -2,6 +2,7 @@ package com.fisa.tick3t.repository;
 
 import com.fisa.tick3t.domain.dto.ConcertDto;
 import com.fisa.tick3t.domain.dto.PageInfo;
+import com.fisa.tick3t.domain.dto.RateDto;
 import com.fisa.tick3t.domain.dto.SeatDto;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -21,4 +22,7 @@ public interface ConcertRepository {
     ArrayList<ConcertDto> selectConcertTitle();
 
     ArrayList<SeatDto> selectSeat(int id);
+
+    RateDto selectConcertRate(int id);
+
 }

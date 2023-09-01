@@ -31,33 +31,53 @@ public class UserController {
     }
 
     @GetMapping("/profile") // O
-    public ResponseDto<?> profile(Authentication authentication){
-        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-        return userService.profile(userId);
+    public ResponseDto<?> profile(Authentication authentication) {
+        try {
+            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+            return userService.profile(userId);
+        } catch (NullPointerException e) {
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
+        }
     }
-
 
 
     @PostMapping("/profile/password") // O
     public ResponseDto<?> changePwd(Authentication authentication, @RequestBody PasswordDto passwordDto) {
-        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-        return userService.changePassword(userId, passwordDto);
+        try {
+            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+            return userService.changePassword(userId, passwordDto);
+        } catch (NullPointerException e) {
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
+        }
     } // todo:비밀번호 변경 후 accesstoken 새로 발급하기
 
     @PostMapping("/profile/fanId") // O
     public ResponseDto<?> changeFanId(Authentication authentication, @RequestBody ProfileDto profileDto) {
-        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-        String fanId = profileDto.getFanId();
-        if (!(fanId.length() == 8)) {
-            return new ResponseDto<>(ResponseCode.INVALID_DATA);
+        try {
+            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+            String fanId = profileDto.getFanId();
+            if (!(fanId.length() == 8)) {
+                return new ResponseDto<>(ResponseCode.INVALID_DATA);
+            }
+            return userService.changeFanId(userId, fanId);
+        } catch (NullPointerException e) {
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
         }
-        return userService.changeFanId(userId, fanId);
+
     }
 
     @PostMapping("/profile/withdraw") // 예매내역 구현 후 예매내역 존재하는지 확인 후에 탈퇴하기
     public ResponseDto<?> withdraw(Authentication authentication, @RequestBody PasswordDto passwordDto) {
-        int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-        return userService.withdraw(userId, passwordDto.getPassword());
+        try {
+            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+            return userService.withdraw(userId, passwordDto.getPassword());
+        } catch (NullPointerException e) {
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
+        }
     }
 
 

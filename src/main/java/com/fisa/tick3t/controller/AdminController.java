@@ -15,7 +15,6 @@ import java.util.Arrays;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin("http://localhost:3000/")
 @RequestMapping("/admin")
 public class AdminController {
 
@@ -52,13 +51,14 @@ public class AdminController {
     }
 
 
-    @GetMapping("/ticket") //date를 받아서 그 이후의 것만 보여주고 싶음..
+    @GetMapping("/ticket")
     public ResponseDto<?> selectConcert() {
         return adminService.dashboardConcert();
     }
 
     @GetMapping("/ticket/{ID}")
     public ResponseDto<?> selectConcertById(@PathVariable String ID) {
-        return adminService.dashboardConcert();
+        int concertId = Integer.parseInt(ID);
+        return adminService.dashboardConcertId(concertId);
     }
 }

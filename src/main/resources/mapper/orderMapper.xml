@@ -77,6 +77,8 @@
     </select>
 
 
+
+    <!-- [/order] 조건에 맞을 경우 예매하기 -->
     <insert id="selectSeat" parameterType="ReservationDto">
         <selectKey resultType="int" keyProperty="canReserve" order="BEFORE" >
             SELECT CASE
@@ -85,48 +87,52 @@
             END AS is_valid
             FROM tck_concert_m AS tm
             JOIN tck_user_m AS um ON tm.fan_cd = um.fan_cd
-            LEFT JOIN CNCR_TICKET_M AS ctm ON tm.concert_id = ctm.concert_id AND um.user_id = ctm.customer_id
+            LEFT JOIN (
+            SELECT * FROM CNCR_TICKET_M
+            WHERE ticket_status_cd = 0 OR ticket_status_cd = 1
+            ) AS ctm ON tm.concert_id = ctm.concert_id AND um.user_id = ctm.customer_id
             WHERE tm.concert_id = #{concertId}
             AND um.user_id = #{userId}
             AND ctm.concert_id IS NULL;
         </selectKey>
         <if test="canReserve == 1">
             INSERT INTO CNCR_TICKET_M (customer_id, concert_id, grade_id, ticket_price, ticket_status_cd, seat_no,
-            hall_id,
-            pay_dtm)
-            VALUES (#{userId}, #{concertId}, #{gradeId}, #{price}, 0,
-            (SELECT MIN(a.seat_no + 1) AS next_available_seat
-            FROM (
-            SELECT seat_no
-            FROM CNCR_TICKET_M
-            WHERE concert_id = #{concertId} AND grade_id = #{gradeId}
-            UNION ALL
-            SELECT 0
-            UNION ALL
-            SELECT #{totalSeat})
-            AS a LEFT JOIN CNCR_TICKET_M AS b ON a.seat_no + 1 = b.seat_no
-            AND b.concert_id = #{concertId}
-            AND b.grade_id = #{gradeId}
-            WHERE a.seat_no &lt; #{totalSeat} AND b.seat_no IS NULL
-            LIMIT 1),
+                                       hall_id,
+                                       pay_dtm)
+            VALUES                    (#{userId}, #{concertId}, #{gradeId}, #{price}, 0,
+                                      (SELECT MIN(a.seat_no + 1) AS next_available_seat
+                                        FROM (
+                                            SELECT seat_no
+                                            FROM CNCR_TICKET_M
+                                            WHERE concert_id = #{concertId} AND grade_id = #{gradeId}
+                                        UNION ALL
+                                            SELECT 0
+                                        UNION ALL
+                                            SELECT #{totalSeat})
+                                        AS a LEFT JOIN CNCR_TICKET_M AS b ON a.seat_no + 1 = b.seat_no
+                                        AND b.concert_id = #{concertId}
+                                        AND b.grade_id = #{gradeId}
+                                        WHERE a.seat_no &lt; #{totalSeat} AND b.seat_no IS NULL
+                                        LIMIT 1),
             (select hall_id from TCK_CONCERT_M where TCK_CONCERT_M.concert_id = #{concertId}),
             DATE_ADD(NOW(), INTERVAL 1 DAY))
         </if>
     </insert>
-    <!--    todo: insert문에 if문 달아서 회원의 공연 예매 정보와 팬클럽 인증 정보도 보내주기 -> 마무리 햇슴 와 나 쫌 쩐다 -->
 
-
+    <!-- [checkOrder] 예매 내역이 있는지 체크-->
     <select id="checkReservation" parameterType="Map" resultType="int">
         SELECT count(*)
         FROM CNCR_TICKET_M
         WHERE concert_id = #{ticketId} AND customer_id = #{userId}
-
+        AND (ticket_status_cd = 0 or ticket_status_cd = 1)
     </select>
 
+    <!-- [checkOrder] 팬인지  체크-->
     <select id="checkFanCd" parameterType="Map" resultType="int">
         SELECT count(tm.fan_cd)
         FROM tck_concert_m as tm JOIN tck_user_m AS um
                                   ON tm.fan_cd = um.fan_cd
         WHERE tm.concert_id = #{ticketId} AND um.user_id = #{userId}
     </select>
+
 </mapper>

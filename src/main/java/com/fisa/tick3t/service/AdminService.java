@@ -145,4 +145,20 @@ public class AdminService {
     }
 
 
+    public ResponseDto<?> dashboardConcertId(int concertId) {
+        ResponseDto<Object> responseDto = new ResponseDto<>();
+        try {
+            RateDto rateDto = concertRepository.selectConcertRate(concertId);
+            double salesRate = (double) rateDto.getSoldSeat()/ rateDto.getTotalSeat();
+            salesRate = Math.round(salesRate * 100.0);
+            rateDto.setSalesRate(salesRate + "%");
+            rateDto.setRemainSeat(rateDto.getTotalSeat() - rateDto.getSoldSeat());
+            responseDto.setCode(ResponseCode.SUCCESS);
+            responseDto.setData(rateDto);
+        }catch (Exception e){
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.FAIL);
+        }
+        return responseDto;
+    }
 }

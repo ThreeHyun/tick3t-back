@@ -5,18 +5,15 @@
 
     <!-- 3.1 [concert] 공연 목록 조회 -->
     <select id="selectConcerts" parameterType="PageInfo" resultType="ConcertDto">
-        SELECT
-            ROW_NUMBER() OVER (ORDER BY ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))) AS rowNum,
-            cm.concert_id as concertId,
-            cm.cncr_title as title,
-            cm.cncr_dtm as date,
-            hm.hall_loc as location
-        FROM
-            TCK_CONCERT_M cm
-                JOIN
-            TCK_HALL_M hm ON cm.hall_id = hm.hall_id
-        ORDER BY
-            ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))
+        SELECT ROW_NUMBER() OVER (ORDER BY ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))) AS rowNum,
+               cm.concert_id                                                                  as concertId,
+               cm.cncr_title                                                                  as title,
+               cm.cncr_dtm                                                                    as date,
+               hm.hall_loc                                                                    as location
+        FROM TCK_CONCERT_M cm
+                 JOIN
+             TCK_HALL_M hm ON cm.hall_id = hm.hall_id
+        ORDER BY ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))
         LIMIT 5 OFFSET #{offset}
     </select>
     <!--    todo : 위, 아래 쿼리를 합칠 방법을 고민해보기 -->
@@ -26,20 +23,16 @@
     </select>
 
 
-
-
     <!-- 3.2 [concert/{ID}] 공연 상세 조회 -->
     <select id="selectConcert" parameterType="int" resultType="ConcertDto">
-        SELECT
-            cm.concert_id as concertId,
-            cm.cncr_title as title,
-            cm.cncr_dtm as date,
-            cm.cncr_start_dtm as startDate,
-            hm.hall_loc as location
-        FROM
-            TCK_CONCERT_M cm
-                JOIN
-            TCK_HALL_M hm ON cm.hall_id = hm.hall_id
+        SELECT cm.concert_id     as concertId,
+               cm.cncr_title     as title,
+               cm.cncr_dtm       as date,
+               cm.cncr_start_dtm as startDate,
+               hm.hall_loc       as location
+        FROM TCK_CONCERT_M cm
+                 JOIN
+             TCK_HALL_M hm ON cm.hall_id = hm.hall_id
         WHERE concert_id = #{concertId}
     </select>
 
@@ -51,15 +44,35 @@
         WHERE cncr_dtm BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 WEEK);
     </select>
 
+    <!-- 5.6 [admin/ticket/{id}] 공연 판매율 모니터링 -->
+    <select id="selectConcertRate" parameterType="int" resultType="RateDto">
+        SELECT
+            (SELECT SUM(seat_no)
+             FROM TCK_HALL_SEAT_M
+             WHERE hall_id = (SELECT DISTINCT hall_id FROM CNCR_TICKET_M WHERE concert_id = #{id})) AS totalSeat,
+            (SELECT COUNT(seat_no)
+             FROM CNCR_TICKET_M
+             WHERE concert_id = #{id} AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) AS soldSeat;
+
+
+    </select>
+
+    <!-- 공연 잔여석 조회 -->
     <select id="selectSeat" parameterType="int" resultType="SeatDto">
-        SELECT cm.cncr_price as price,
-               sm.grade_name as grade,
-               sm.seat_no as totalSeat
+        SELECT cm.cncr_price                                  as price,
+               sm.grade_name                                  as grade,
+               sm.seat_no                                     as totalSeat,
+               COALESCE(COUNT(ctm.seat_no), 0)                as bookedSeat,
+               (sm.seat_no - COALESCE(COUNT(ctm.seat_no), 0)) as remainSeat,
+               sm.grade_id
         FROM TCK_CONCERT_M cm
-                JOIN
-             TCK_HALL_SEAT_M sm
-                 ON cm.hall_id = sm.hall_id
-        WHERE concert_id = #{id}
+                 JOIN
+             TCK_HALL_SEAT_M sm ON cm.hall_id = sm.hall_id
+                 LEFT JOIN
+             CNCR_TICKET_M ctm ON cm.concert_id = ctm.concert_id AND sm.grade_id = ctm.grade_id
+                 AND (ctm.ticket_status_cd = '0' OR ctm.ticket_status_cd = '1')
+        WHERE cm.concert_id = #{id}
+        GROUP BY sm.grade_id
     </select>
 </mapper>
 
