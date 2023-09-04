@@ -53,25 +53,24 @@ public class OrderController {
         } //todo: exceptionhandler를 사용해서 에러 처리 구현하기
     }
 
+    @PostMapping("/myorder/cancel")
+    public ResponseDto<?> cancelOrder(Authentication authentication, @RequestBody OrderDto orderDto) {
+        try {
+            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
+            int ticketId = orderDto.getTicketId();
+            return orderService.cancelOrder(userId, ticketId);
+        } catch (NullPointerException e) {
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
+        }
+    }
+
     @PostMapping("/myorder/pay")
     public ResponseDto<?> payOrder(Authentication authentication, @RequestBody OrderDto orderDto) {
         try {
             int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
             int ticketId = orderDto.getTicketId();
             return orderService.payOrder(userId, ticketId);
-        } catch (NullPointerException e) {
-            log.error(e.getMessage());
-            return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
-        }
-
-    }
-
-    @PostMapping("/myorder/cancel")
-    public ResponseDto<?> cancleOrder(Authentication authentication, @RequestBody OrderDto orderDto) {
-        try {
-            int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-            int ticketId = orderDto.getTicketId();
-            return orderService.cancelOrder(userId, ticketId);
         } catch (NullPointerException e) {
             log.error(e.getMessage());
             return new ResponseDto<>(ResponseCode.INVALID_TOKEN);

@@ -63,7 +63,7 @@ public class OrderService {
                 responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
                 return responseDto;
             }
-            responseDto.setData(orderRepository.selectOrder(userId, ticketId));
+            responseDto.setData(orderDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -108,7 +108,7 @@ public class OrderService {
         } catch (DataIntegrityViolationException e) {
             // 잔여석이 존재하지 않을 경우 에러 반환
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
+            responseDto.setCode(ResponseCode.NON_EXISTENT_SEAT);
         } catch (DataAccessException e) {
             // 팬클럽이 아니라거나 이미 예매 내역이 있을 경우
             if (e.getCause() instanceof SQLException) {

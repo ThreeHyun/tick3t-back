@@ -49,14 +49,14 @@ CREATE TABLE TCK_CONCERT_M
     cncr_dtm         datetime     NULL,
     cncr_price       int          NULL COMMENT '콘서트 기준 가격',
     cncr_cancel_date datetime     NULL COMMENT '취소 가능일자',
-    fan_cd           int          NULL COMMENT '대상 팬덤',
+    fan_cd           varchar(8)          NULL COMMENT '대상 팬덤',
     cncr_start_dtm   datetime     NULL
 );
 
 CREATE TABLE TCK_HALL_M
 (
     hall_id   int          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    hall_name varchar(10)  NULL,
+    hall_name varchar(15)  NULL,
     hall_loc  varchar(256) NULL COMMENT '주소'
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE CNCR_TICKET_M
     hall_id          int      NOT NULL,
     resv_dtm         datetime NOT NULL DEFAULT now(),
     pay_dtm          datetime NULL,
-    ticket_status_cd char(1)  NULL     DEFAULT 0 COMMENT '0: 결제대기, 1: 결제 완료(예매완료), 2: 예매취소, 3: 결제취소',
+    ticket_status_cd int  NULL     DEFAULT 0 COMMENT '0: 결제대기, 1: 결제 완료(예매완료), 2: 예매취소, 3: 결제취소',
     ticket_price     int      NOT NULL COMMENT '티켓 실제 가격',
     seat_no          int      NOT NULL COMMENT '좌석번호'
 );
