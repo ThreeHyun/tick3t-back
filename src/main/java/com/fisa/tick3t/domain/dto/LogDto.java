@@ -20,4 +20,10 @@ public class LogDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime logCreateDate;
 
+    public LogDto(int userId, String ip, String statusCode){
+        this.accessIp = ip;
+        this.statusCode = statusCode;
+        this.rowNum = userId;
+    }
+
 }

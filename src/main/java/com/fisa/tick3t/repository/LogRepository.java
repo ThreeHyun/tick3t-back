@@ -13,4 +13,6 @@ public interface LogRepository {
     ArrayList<LogDto> selectLog(PageInfo pageInfo);
 
     int selectLogNum(int id);
+
+    void insertLog(LogDto logDto);
 }

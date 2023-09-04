@@ -21,4 +21,9 @@
         FROM TCK_LOG_M
         WHERE user_id = #{id}
     </select>
+
+    <insert id="insertLog" parameterType="LogDto">
+        INSERT INTO TCK_LOG_M (user_id, access_ip, access_status_cd)
+        VALUES (#{rowNum}, #{accessIp}, #{statusCode})
+    </insert>
 </mapper>
