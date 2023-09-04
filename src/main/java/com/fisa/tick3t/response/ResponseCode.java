@@ -19,7 +19,7 @@ public enum ResponseCode {
     MISMATCHED_USER_INFO("1115", "사용자 정보가 일치하지 않습니다."),
     INVALID_TOKEN("1116", "유효하지 않은 토큰입니다."),
     EMAIL_ALREADY_IN_USE("2121", "이미 사용중인 이메일 주소입니다."),
-    UNKNOWN_EMAIL("2421", "가입되지 않은 이메일 주소입니다."),
+    UNKNOWN_EMAIL("2421", "존재하지 않는 이메일 주소입니다."),
     INVALID_FAN_ID("4323", "유효하지 않은 팬클럽 회원 번호입니다."),
     CANNOT_WITHDRAW("7521", "현재 예매중인 내역이 존재할 경우 탈퇴할 수 없습니다."),
     NON_EXISTENT_USER("5221", "해당하는 사용자가 존재하지 않습니다."),
@@ -28,7 +28,8 @@ public enum ResponseCode {
     NOT_CONCERT_START_TIME("6001", "공연 예매 시작 시간이 아닙니다."),
     UNAUTHORIZED_FAN("6002", "팬클럽 인증을 받지 못한 경우 예매할 수 없습니다."),
     EXCEED_TICKET_LIMIT("6003", "1인 1매만 예매 가능합니다."),
-    NON_EXISTENT_RESERVATION("6421", "잔여석이 존재하지 않습니다."),
+    NON_EXISTENT_SEAT("6421", "잔여석이 존재하지 않습니다."),
+    NON_EXISTENT_RESERVATION("6421", "존재하지 않는 예매 정보입니다."),
     JWT_ERROR("8888", "JWT 에러입니다. 토큰문제임" ),
     FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요");
 

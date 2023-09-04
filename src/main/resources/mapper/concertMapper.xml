@@ -16,12 +16,6 @@
         ORDER BY ABS(TIMESTAMPDIFF(SECOND, NOW(), cncr_start_dtm))
         LIMIT 5 OFFSET #{offset}
     </select>
-    <!--    todo : 위, 아래 쿼리를 합칠 방법을 고민해보기 -->
-    <select id="selectConcertsNum" resultType="int">
-        SELECT count(*) as totalElement
-        FROM TCK_CONCERT_M
-    </select>
-
 
     <!-- 3.2 [concert/{ID}] 공연 상세 조회 -->
     <select id="selectConcert" parameterType="int" resultType="ConcertDto">

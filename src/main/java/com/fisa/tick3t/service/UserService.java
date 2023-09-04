@@ -10,8 +10,14 @@ import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.mail.SendFailedException;
+import javax.mail.internet.MimeMessage;
 
 @Slf4j
 @Service
@@ -20,6 +26,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UtilFunction util;
+    private final JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String from;
 
     // 2.1 [signup] 회원가입
     @Transactional
@@ -83,12 +93,26 @@ public class UserService {
                 return responseDto;
             }
 
-            // 새 패스워드 생성, 해싱, Update
+            // 새 패스워드 생성
             String password = util.generatePassword();
+
+            // 메일링처리
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            mimeMessageHelper.setFrom(from);
+            mimeMessageHelper.setTo(userEmail);
+            mimeMessageHelper.setSubject("[TICK3T] | 임시비밀번호 안내");
+            String body = "회원님의 임시 비밀번호는 " + password + " 입니다.";
+            mimeMessageHelper.setText(body);
+            javaMailSender.send(mimeMessage);
+
+            // 패스워드 해싱 및 업데이트
             PasswordDto passwordDto = new PasswordDto(userId, util.hashPassword(password));
             userRepository.updatePassword(passwordDto);
-            // todo: 메일링처리
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (SendFailedException e){
+            log.error(e.getMessage());
+            responseDto.setCode(ResponseCode.UNKNOWN_EMAIL);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
