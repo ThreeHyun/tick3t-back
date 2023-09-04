@@ -17,7 +17,7 @@
         on CM.concert_id = TM.concert_id
         WHERE customer_id = #{userId}
         <if test="queryStringDto.category != null and queryStringDto.category != '4'">
-            AND TM.ticket_status_cd = CONCAT(#{queryStringDto.category})
+            AND TM.ticket_status_cd = #{queryStringDto.category}
         </if>
         <if test="queryStringDto.word != null">
             AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
@@ -35,23 +35,25 @@
                (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
                CM.cncr_dtm                                                             as datetime,
                TM.seat_no                                                              as seat,
-               CM.cncr_price                                                           as price,
-               CM.cncr_cancel_date                                                     as cancelDate
+               TM.ticket_price                                                          as price,
+               CM.cncr_cancel_date                                                     as cancelDate,
+               TM.ticket_status_cd                                                      as payState,
+               TM.pay_dtm                                                               as payDtm
         FROM CNCR_TICKET_M TM
                  JOIN TCK_CONCERT_M CM
                       on CM.concert_id = TM.concert_id
         WHERE customer_id = #{userId}
-          and CM.concert_id = #{concertId}
+          and TM.reservation_id = #{concertId}
     </select>
 
 
     <!-- [myorder/pay] 내 예매내역 결제하기 -->
     <update id="payOrder" parameterType="Map">
         UPDATE CNCR_TICKET_M
-        SET ticket_status_cd = '1'
+        SET ticket_status_cd = 1
         WHERE customer_id = #{userId}
           AND reservation_id = #{ticketId}
-          AND ticket_status_cd = '0'
+          AND ticket_status_cd = 0
     </update>
 
     <update id="cancelOrder" parameterType="Map">
@@ -59,14 +61,21 @@
         SET ticket_status_cd =
             <choose>
                 <when test="payState = 0">
-                    '2'
+                    2
                 </when>
                 <otherwise>
-                    '3'
+                    3
                 </otherwise>
             </choose>
         WHERE customer_id = #{userId}
           AND reservation_id = #{ticketId}
+    </update>
+
+    <update id="cancelOrders">
+        UPDATE CNCR_TICKET_M
+        SET ticket_status_cd = 2
+        WHERE ticket_status_cd = 0
+        AND pay_dtm &lt; CURRENT_TIMESTAMP
     </update>
 
 

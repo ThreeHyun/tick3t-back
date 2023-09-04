@@ -24,6 +24,7 @@ public interface OrderRepository {
     void selectSeat(ReservationDto ReservationDto);
 
     void cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    void cancelOrders();
 
     int checkReservation(int userId, int ticketId);
 
