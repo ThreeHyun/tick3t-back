@@ -10,7 +10,6 @@ import lombok.Setter;
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PageInfo {
-    private Integer userId;
     private int pageNo;
     private int pageSize;
     private int offset;
@@ -18,9 +17,9 @@ public class PageInfo {
     private int totalElement;
     //page 정보 담기
 
-    public PageInfo(int pageNo, int pageSize){
+    public PageInfo(int pageNo, int pageSize) {
         this.pageNo = pageNo;
         this.pageSize = pageSize;
-        this.offset = pageSize * (pageNo -1);
+        this.offset = pageSize * (pageNo - 1);
     }
 }

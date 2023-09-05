@@ -2,6 +2,7 @@ package com.fisa.tick3t.service;
 
 
 import com.fisa.tick3t.domain.dto.*;
+import com.fisa.tick3t.global.Constants;
 import com.fisa.tick3t.repository.OrderRepository;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLException;
 import java.util.List;
 
+import static com.fisa.tick3t.global.PayCode.codeToPayDesc;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,27 +27,22 @@ public class OrderService {
 
     public ResponseDto<?> selectOrders(int userId, QueryStringDto queryStringDto) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
-        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), 3);
+
+        // 페이징용 객체 생성
+        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), Constants.concertPageSize);
         try {
-            pageInfo.setTotalElement(orderRepository.selectOrderNum(userId));
-            // todo: 검색할 경우 필터에 따라서 totalElement도 달라지는데 생각 못했음
+            // 검색 예매내역 수 조회
+            pageInfo.setTotalElement(orderRepository.selectOrderNum(queryStringDto, userId));
+
+            // 예매내역 조회
             List<OrderDto> orders = orderRepository.selectOrders(userId, queryStringDto);
+
+            // 0 : 결제 대기 1: 결제 완료 2: 예매 취소 3: 결제 취소
             for (OrderDto order : orders) {
-                switch (order.getPayState()) {
-                    case "0":
-                        order.setPayState("결제 대기");
-                        break;
-                    case "1":
-                        order.setPayState("결제 완료");
-                        break;
-                    case "2":
-                        order.setPayState("예매 취소");
-                        break;
-                    case "3":
-                        order.setPayState("결제 취소");
-                        break;
-                } // todo: map이나 enum으로 바꿔보기 pageSize들도 마찬가지 상수로 둘 수 있게!
+                order.setPayState(codeToPayDesc(order.getPayState()));
             }
+
+            // 반환용 객체 생성
             OrderPageDto orderPageDto = new OrderPageDto(pageInfo, orders);
             responseDto.setData(orderPageDto);
             responseDto.setCode(ResponseCode.SUCCESS);
@@ -58,11 +56,16 @@ public class OrderService {
     public ResponseDto<?> selectOrder(int userId, int ticketId) {
         ResponseDto<OrderDto> responseDto = new ResponseDto<>();
         try {
+            // id로 예매내역 조회
             OrderDto orderDto = orderRepository.selectOrder(userId, ticketId);
+
+            // 반환값이 null이라면 없는 예매내역 결과 반환
             if (orderDto == null) {
                 responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
                 return responseDto;
             }
+
+            // 조회 결과 반환
             responseDto.setData(orderDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
@@ -76,7 +79,14 @@ public class OrderService {
     public ResponseDto<?> payOrder(int userId, int ticketId) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
-            orderRepository.payOrder(userId, ticketId);
+            // 예매내역 결제
+            int result = orderRepository.payOrder(userId, ticketId);
+
+            // update된 내역이 없다면 존재하지 않는 예매정보 반환
+            if(result == 0){
+                responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
+                return responseDto;
+            }
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -89,7 +99,14 @@ public class OrderService {
     public ResponseDto<?> cancelOrder(int userId, int ticketId) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
-            orderRepository.cancelOrder(userId, ticketId);
+            // 예매내역 취소
+            int result = orderRepository.cancelOrder(userId, ticketId);
+
+            // update된 내역이 없다면 존재하지 않는 예매정보 반환
+            if(result == 0){
+                responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
+                return responseDto;
+            }
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -103,6 +120,7 @@ public class OrderService {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         reservationDto.setUserId(userId);
         try {
+            // 랜덤 좌석 선택 후 저장
             orderRepository.selectSeat(reservationDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (DataIntegrityViolationException e) {

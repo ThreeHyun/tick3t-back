@@ -39,7 +39,9 @@ public interface UserRepository {
     // 5.4 [admin/fan/{fancode}] 팬덤별 회원 체크 대시보드
     FanCountDto selectFanSum(String fanCd);
 
-    int selectUserNum();
+    int selectUserNum(QueryStringDto queryStringDto);
+
+    ArrayList<String> selectFanCd();
 
     //1-5 사용자 팬덤 조회
 //    Integer selectFanJoin(String fanCd);

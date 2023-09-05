@@ -29,9 +29,12 @@ public class OrderController {
                                        @RequestParam(name = "category", required = false) String category,
                                        @RequestParam(name = "word", required = false) String word,
                                        @RequestParam(name = "page", defaultValue = "1") int page) {
+        log.info("category: " + category);
+        log.info("word: " + word);
+        log.info("page: " + page);
         try {
             int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-            ArrayList<String> categories = new ArrayList<>(Arrays.asList("1", "2", "3"));
+            ArrayList<String> categories = new ArrayList<>(Arrays.asList("결제 대기", "결제 완료", "예매 취소", "결제 취소"));
             QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories, 3);
             return orderService.selectOrders(userId, queryStringDto);
         } catch (NullPointerException e) {

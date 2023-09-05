@@ -1,6 +1,8 @@
 package com.fisa.tick3t.global;
 
 import com.fisa.tick3t.domain.dto.QueryStringDto;
+import com.fisa.tick3t.domain.dto.RateDto;
+import com.fisa.tick3t.domain.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -9,6 +11,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.fisa.tick3t.global.StatusCode.codeToStatusDesc;
+
 @Slf4j
 @Component
 public class UtilFunction {
@@ -17,38 +22,37 @@ public class UtilFunction {
     static BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
     public String emailMasking(String email) {
-        String masking = "";
+        StringBuilder masking = new StringBuilder();
         char[] chars = email.split("@")[0].toCharArray();
         int count = chars.length;
         for (char c : chars){
             if (count == 1 || count == 2) {
-                masking += String.valueOf(c);
+                masking.append(c);
             }else{
-                masking +=  "*";
+                masking.append("*");
             }
             count -= 1;
         }
         return masking +"@"+ email.split("@")[1];
-
     }
 
     public String nameMasking(String name) {
-        String masking = "";
+        StringBuilder masking = new StringBuilder();
         char[] chars = name.toCharArray();
         int count = 1;
         for (char c : chars) {
             if (count == 1) {
-                masking += String.valueOf(c);
+                masking.append(c);
                 count += 1;
             } else if (count == chars.length) {
-                masking += String.valueOf(c);
+                masking.append(c);
                 break;
             } else {
-                masking += "*";
+                masking.append("*");
                 count += 1;
             }
         }
-        return masking;
+        return masking.toString();
     }
 
 
@@ -110,6 +114,9 @@ public class UtilFunction {
     public QueryStringDto checkQuery(String category, String word, int page, ArrayList<String> categories, int pageSize) {
         if (category != null & categories.contains(category)) {
             category = category.trim();
+            category = String.valueOf(categories.indexOf(category));
+        }else{
+            category = null;
         }
         if(word != null){
             word = word.trim();
@@ -121,13 +128,19 @@ public class UtilFunction {
         return new QueryStringDto(category, word, page, offset);
     }
 
-    public boolean check(String param){
-        boolean result = true;
-        if(param == null){
-            result= false;
-        } else if (param.trim().equals("")) {
-            result = false;
-        }
-        return result;
+    public void calculateSalesRate(RateDto rateDto) {
+        double salesRate = (double) rateDto.getSoldSeat() / rateDto.getTotalSeat();
+        salesRate = Math.round(salesRate * 100.0);
+        rateDto.setSalesRate(salesRate + "%");
+        rateDto.setRemainSeat(rateDto.getTotalSeat() - rateDto.getSoldSeat());
     }
+
+    public void maskingUserInfo(UserDto userDto) {
+        userDto.setName(nameMasking(userDto.getName()));
+        userDto.setEmail(emailMasking(userDto.getEmail()));
+        userDto.setUserPwd(null);
+        userDto.setRole(null);
+        userDto.setStatusCd(codeToStatusDesc(userDto.getStatusCd()));
+    }
+
 }

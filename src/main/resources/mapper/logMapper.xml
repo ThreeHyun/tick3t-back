@@ -4,7 +4,7 @@
 <mapper namespace="com.fisa.tick3t.repository.LogRepository">
 
     <!-- 5.3 [admin/log/{ID}] 사용자 Id로 로그 조회 -->
-    <select id="selectLog" parameterType="PageInfo" resultType="LogDto">
+    <select id="selectLog" parameterType="Map" resultType="LogDto">
         SELECT  row_number() over (ORDER BY create_dtm) as rowNum,
                 log_id,
                 access_ip,
@@ -13,7 +13,7 @@
         FROM TCK_LOG_M
         WHERE user_id = #{userId}
         ORDER BY create_dtm
-        LIMIT #{pageSize} OFFSET #{offset}
+        LIMIT #{PageInfo.pageSize} OFFSET #{PageInfo.offset}
     </select>
 
     <select id="selectLogNum" parameterType="int" resultType="int">

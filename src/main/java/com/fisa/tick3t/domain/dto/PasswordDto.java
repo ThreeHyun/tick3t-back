@@ -19,7 +19,7 @@ public class PasswordDto {
     String newPasswordCheck;
     int userId;
 
-    public PasswordDto(int userId, String newPassword){
+    public PasswordDto(int userId, String newPassword) {
         this.userId = userId;
         this.newPassword = newPassword;
     }

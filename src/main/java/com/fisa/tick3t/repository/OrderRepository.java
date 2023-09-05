@@ -17,13 +17,13 @@ public interface OrderRepository {
     //ArrayList<OrderDto> selectOrders(QueryStringDto queryStringDto);
     OrderDto selectOrder(@Param("userId") int userId, @Param("concertId") int concertId);
 
-    void payOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    int payOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
 
-    int selectOrderNum(int userId);
+    int selectOrderNum(@Param("queryStringDto") QueryStringDto queryStringDto, @Param("userId") int userId);
 
     void selectSeat(ReservationDto ReservationDto);
 
-    void cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    int cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
     void cancelOrders();
 
     int checkReservation(int userId, int ticketId);

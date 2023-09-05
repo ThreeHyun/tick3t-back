@@ -1,8 +1,9 @@
 package com.fisa.tick3t.controller;
 
 import com.fisa.tick3t.domain.dto.QueryStringDto;
+import com.fisa.tick3t.global.Constants;
 import com.fisa.tick3t.global.UtilFunction;
-import com.fisa.tick3t.response .ResponseDto;
+import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,11 @@ public class AdminController {
     public ResponseDto<?> selectUsers(@RequestParam(name = "category", required = false) String category,
                                       @RequestParam(name = "word", required = false) String word,
                                       @RequestParam(name = "page", defaultValue = "1") int page) {
+        log.info("category: " + category);
+        log.info("word: " + word);
+        log.info("page: " + page);
         ArrayList<String> categories = new ArrayList<>(Arrays.asList("name", "email", "fanCd"));
-        QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories,20);
+        QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories, Constants.userPageSize);
         return adminService.selectUsers(queryStringDto);
     }
 
@@ -42,12 +46,17 @@ public class AdminController {
         return adminService.selectLog(ID, page);
     }
 
+    @GetMapping("/fan")
+    public ResponseDto<?> dashboardFan() {
+        return adminService.dashboardFan();
+    }
+
     @GetMapping("/fan/{fanCd}")
-    public ResponseDto<?> selectFan(@PathVariable(required = false) String fanCd) {
-        if(fanCd == null){
-            fanCd = "12341";
+    public ResponseDto<?> selectFanId(@PathVariable(required = false) String fanCd) {
+        if (fanCd == null) {
+            fanCd = "IU";
         }
-        return adminService.dashboardFan(fanCd);
+        return adminService.dashboardFanId(fanCd);
     }
 
 

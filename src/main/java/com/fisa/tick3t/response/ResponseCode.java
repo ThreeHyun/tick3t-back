@@ -10,7 +10,6 @@ import lombok.Getter;
 public enum ResponseCode {
     SUCCESS("0000", "성공적으로 처리되었습니다."),
     MISSING_OR_INVALID_REQUEST("0022", "필수 파라미터 값 누락 또는 유효하지 않은 파라미터 값입니다."),
-    // todo: 이 에러가 발생할 경우 log.debug()를 사용해서 파라미터 정보를 담아줍니다.
     INVALID_DATA("0024", "유효하지 않은 형식의 데이터입니다."),
     INVALID_USER("1111", "유효하지 않은 사용자입니다."),
     LOGGED_OUT_USER("1112", "로그아웃된 사용자입니다."),

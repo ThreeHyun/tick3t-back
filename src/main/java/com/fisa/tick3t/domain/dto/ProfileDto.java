@@ -14,7 +14,7 @@ public class ProfileDto {
     String birth;
     String fanId;
 
-    public ProfileDto(String email, String name, String birth, String fanId){
+    public ProfileDto(String email, String name, String birth, String fanId) {
         this.email = email;
         this.name = name;
         this.birth = birth;

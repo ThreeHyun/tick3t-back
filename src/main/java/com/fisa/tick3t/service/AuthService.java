@@ -3,6 +3,7 @@ package com.fisa.tick3t.service;
 import com.fisa.tick3t.domain.dto.LogDto;
 import com.fisa.tick3t.domain.dto.TokenDto;
 import com.fisa.tick3t.domain.dto.UserDto;
+import com.fisa.tick3t.global.StatusCode;
 import com.fisa.tick3t.jwt.JwtUserDetails;
 import com.fisa.tick3t.jwt.TokenProvider;
 import com.fisa.tick3t.repository.LogRepository;
@@ -43,7 +44,7 @@ public class AuthService {
 
             // 로그인한 유저 id와 ip, 상태 정보를 로그 DB에 저장
             int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-            LogDto logDto = new LogDto(userId, ip,"0");
+            LogDto logDto = new LogDto(userId, ip, StatusCode.LOGIN.getCode());
             logRepository.insertLog(logDto);
 
             // jwt 토큰을 반환
@@ -54,9 +55,9 @@ public class AuthService {
         } catch(AuthenticationException e) {
             log.error(e.getMessage());
             try {
-                // 로그인 실패한  유저 id와 ip, 상태 정보를 로그 DB에 저장
+                // 로그인 실패한 유저 id와 ip, 상태 정보를 로그 DB에 저장
                 int userId = userRepository.checkEmail(userDto.getEmail());
-                LogDto logDto = new LogDto(userId, ip,"1");
+                LogDto logDto = new LogDto(userId, ip, StatusCode.LOGIN_FAILURE.getCode());
                 logRepository.insertLog(logDto);
                 responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
 

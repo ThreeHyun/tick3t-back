@@ -90,22 +90,32 @@
         user_id, user_name as name, user_email as email, fan_cd, user_status_cd as statusCd, create_dtm as createDate
         FROM TCK_USER_M
         <if test="category == null"/>
-        <if test="category == 'name'">
+        <if test="category == 0">
             WHERE user_name LIKE CONCAT('%',#{word}, '%')
         </if>
-        <if test="category == 'email'">
+        <if test="category == 1">
             WHERE user_email LIKE CONCAT('%',#{word}, '%')
         </if>
-        <if test="category == 'fanCd'">
+        <if test="category == 2">
             WHERE fan_cd LIKE CONCAT('%',#{word}, '%')
         </if>
         ORDER BY create_dtm
-        LIMIT 20 OFFSET #{offset}
+        LIMIT ${@com.fisa.tick3t.global.Constants@userPageSize} OFFSET #{offset}
     </select>
 
-    <select id="selectUserNum" resultType="int">
+    <select id="selectUserNum" parameterType="QueryStringDto" resultType="int">
         SELECT count(*) as totalElement
         FROM TCK_USER_M
+        <if test="category == null"/>
+        <if test="category == 0">
+            WHERE user_name LIKE CONCAT('%',#{word}, '%')
+        </if>
+        <if test="category == 1">
+            WHERE user_email LIKE CONCAT('%',#{word}, '%')
+        </if>
+        <if test="category == 2">
+            WHERE fan_cd LIKE CONCAT('%',#{word}, '%')
+        </if>
     </select>
 
 
@@ -124,6 +134,11 @@
                role
         from TCK_USER_M
         where user_id = #{userId}
+    </select>
+
+    <!-- 5.4 [admin/fan] 팬덤 List 내려주기 -->
+    <select id="selectFanCd" resultType="String">
+        SELECT distinct fan_cd FROM TCK_USER_M
     </select>
 
 

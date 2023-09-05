@@ -23,7 +23,7 @@
             AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
         </if>
         ORDER BY resv_dtm
-        LIMIT 3 OFFSET #{queryStringDto.offset}
+        LIMIT ${@com.fisa.tick3t.global.Constants@concertPageSize} OFFSET #{queryStringDto.offset}
     </select>
 
 
@@ -79,10 +79,19 @@
     </update>
 
 
-    <select id="selectOrderNum" parameterType="int" resultType="int">
+    <select id="selectOrderNum" parameterType="Map" resultType="int">
         SELECT count(*) as totalElement
         FROM CNCR_TICKET_M
         WHERE customer_id = #{userId}
+        <if test="queryStringDto.category != null and queryStringDto.category != '4'">
+            AND ticket_status_cd = #{queryStringDto.category}
+        </if>
+        <if test="queryStringDto.word != null">
+            AND (SELECT cncr_title
+                 FROM TCK_CONCERT_M
+                 WHERE TCK_CONCERT_M.concert_id = CNCR_TICKET_M.concert_id)
+            LIKE CONCAT('%',#{queryStringDto.word}, '%')
+        </if>
     </select>
 
 

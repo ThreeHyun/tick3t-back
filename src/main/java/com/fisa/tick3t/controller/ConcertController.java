@@ -17,12 +17,12 @@ public class ConcertController {
     private final ConcertService concertService;
 
     @GetMapping("/concert")
-    public ResponseDto<?> selectConcerts(@RequestParam(name = "page", defaultValue = "1") int page){
+    public ResponseDto<?> selectConcerts(@RequestParam(name = "page", defaultValue = "1") int page) {
         return concertService.selectConcerts(page);
     }
 
     @GetMapping("/concert/{ID}")
-    public ResponseDto<?> selectConcert(@PathVariable int ID){
+    public ResponseDto<?> selectConcert(@PathVariable int ID) {
         return concertService.selectConcert(ID);
     }
 }

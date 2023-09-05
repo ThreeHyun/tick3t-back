@@ -51,7 +51,7 @@ public class UserController {
             log.error(e.getMessage());
             return new ResponseDto<>(ResponseCode.INVALID_TOKEN);
         }
-    } // todo:비밀번호 변경 후 accesstoken 새로 발급하기
+    }
 
     @PostMapping("/profile/fanId") // O
     public ResponseDto<?> changeFanId(Authentication authentication, @RequestBody ProfileDto profileDto) {
@@ -59,6 +59,7 @@ public class UserController {
             int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
             String fanId = profileDto.getFanId();
             if (!(fanId.length() == 8)) {
+                log.info("fanID : " + fanId);
                 return new ResponseDto<>(ResponseCode.INVALID_DATA);
             }
             return userService.changeFanId(userId, fanId);

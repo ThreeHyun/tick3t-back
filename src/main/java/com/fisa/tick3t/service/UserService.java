@@ -2,6 +2,8 @@ package com.fisa.tick3t.service;
 
 import com.fisa.tick3t.domain.dto.PasswordDto;
 import com.fisa.tick3t.domain.dto.ProfileDto;
+import com.fisa.tick3t.domain.dto.TokenDto;
+import com.fisa.tick3t.jwt.TokenProvider;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.domain.vo.User;
@@ -13,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +33,9 @@ public class UserService {
     private final UtilFunction util;
     private final JavaMailSender javaMailSender;
 
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final TokenProvider tokenProvider;
+
     @Value("${spring.mail.username}")
     private String from;
 
@@ -40,10 +48,16 @@ public class UserService {
         // 파라미터 완전성 검사
         if (userPwd == null || userEmail == null || user.getName() == null) {
             responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            log.info("userPwd : " + userPwd);
+            log.info("userEmail : " + userEmail);
+            log.info("Name : " + user.getName());
             return responseDto;
         }
         // 파라미터 유효성 검사
         if (!util.isValidPassword(userPwd) || !util.isValidEmail(userEmail) || user.getName().length() > 5) {
+            log.info("패스워드 형식이 일치하나요? :" + userPwd );
+            log.info("이메일 형식이 일치하나요? :" + userEmail );
+            log.info("유저 name이 5자를 초과하나요? :" + user.getName() );
             responseDto.setCode(ResponseCode.INVALID_DATA);
             return responseDto;
         }
@@ -81,6 +95,9 @@ public class UserService {
         // 파라미터 완전성 검사
         if (userEmail == null || userName == null || userBirth == null) {
             responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            log.info("userEmail : " + userEmail );
+            log.info("userName : " + userName );
+            log.info("userBirth : " + userBirth );
             return responseDto;
         }
         try {
@@ -124,11 +141,15 @@ public class UserService {
     public ResponseDto<ProfileDto> profile(int userId) {
         ResponseDto<ProfileDto> responseDto = new ResponseDto<>();
         try {
+            // 회원 정보 조회
             ProfileDto profileDto = userRepository.selectProfile(userId);
+            // null이라면 존재하지 않는 회원 반환
             if (profileDto == null) {
                 responseDto.setCode(ResponseCode.NON_EXISTENT_USER);
                 return responseDto;
             }
+
+            // 마스킹처리
             profileDto.setEmail(util.emailMasking(profileDto.getEmail()));
             profileDto.setName(util.nameMasking(profileDto.getName()));
             responseDto.setCode(ResponseCode.SUCCESS);
@@ -142,12 +163,14 @@ public class UserService {
 
     // 4.2 [profile/password] 회원 비밀번호 변경
     @Transactional
-    public ResponseDto<ResponseCode> changePassword(int userId, PasswordDto passwordDto) {
-        ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
+    public ResponseDto<Object> changePassword(int userId, PasswordDto passwordDto) {
+        ResponseDto<Object> responseDto = new ResponseDto<>();
         String newPwd = passwordDto.getNewPassword();
         String oldPwd = passwordDto.getOldPassword();
         // // 파라미터 완전성, 유효성 검사
         if (newPwd.equals(oldPwd) || !newPwd.equals(passwordDto.getNewPasswordCheck()) || !util.isValidPassword(newPwd)) {
+            log.info(oldPwd + " " + newPwd + " ");
+            log.info("패스워드 형식이 일치하나요? : " + util.isValidPassword(newPwd));
             responseDto.setCode(ResponseCode.INVALID_DATA);
             return responseDto;
         }
@@ -165,6 +188,12 @@ public class UserService {
             passwordDto.setUserId(userId);
             // 해싱한 비밀번호 DB에 저장
             userRepository.updatePassword(passwordDto);
+
+            // 새 accessToken 발급 후 반환
+            UsernamePasswordAuthenticationToken authenticationToken = userDto.ToUser(userDto).toAuthentication();
+            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
+            responseDto.setData(tokenDto.getAccessToken());
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());

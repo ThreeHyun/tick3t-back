@@ -2,7 +2,7 @@ package com.fisa.tick3t.jwt;
 
 import com.fisa.tick3t.domain.dto.TokenDto;
 import com.fisa.tick3t.domain.vo.User;
-import com.fisa.tick3t.response.ResponseCode;
+import com.fisa.tick3t.global.Constants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -24,12 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TokenProvider {
-    private static final String AUTHORITIES_KEY = "auth";
-    private static final String BEARER_TYPE = "Bearer";
-    // todo : 보통 prefix나 Type이라는 변수명을 사용한다. 고치기 + yaml에 넣어두기
-    //private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30;
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 12 * 60 * 60 * 1000L;
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;
 
     private final Key key;
 
@@ -48,22 +42,22 @@ public class TokenProvider {
         boolean statusCd = jwtUserDetails.isAccountNonLocked();
         // 여기서 받아서 만약에 탈퇴한 사용자라면 exception을 던집니다 . 그래서 거기서 반환합니다 에러를..
         long now = (new Date()).getTime();
-        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
+        Date accessTokenExpiresIn = new Date(now + Constants.ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("userId", userId)
                 .claim("statusCd", statusCd)
-                .claim(AUTHORITIES_KEY, authorities)
+                .claim(Constants.AUTHORITIES_KEY, authorities)
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(now + Constants.REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
         return TokenDto.builder()
-                .grantType(BEARER_TYPE)
+                .grantType(Constants.BEARER_TYPE)
                 .accessToken(accessToken)
                 .accessTokenExpiresIn(accessTokenExpiresIn.getTime())
                 .refreshToken(refreshToken)
@@ -74,13 +68,13 @@ public class TokenProvider {
         // 토큰 복호화
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get(AUTHORITIES_KEY) == null) {
+        if (claims.get(Constants.AUTHORITIES_KEY) == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 
         // 클레임에서 권한 정보 가져오기
         Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                Arrays.stream(claims.get(Constants.AUTHORITIES_KEY).toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
@@ -95,36 +89,12 @@ public class TokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-//    public boolean validateToken(String token) {
-//        try {
-//            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-//            return true;
-//        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-//            log.info("잘못된 jwt 서명입니다.");
-//        } catch (ExpiredJwtException e) {
-//            log.info("만료된 jwt 토큰입니다.");
-//        } catch (UnsupportedJwtException e) {
-//            log.info("지원되지 않는 jwt 토큰입니다.");
-//        } catch (IllegalArgumentException e) {
-//            log.info("jwt 토큰이 잘못되었습니다.");
-//        }
-//        return false;
-//    }
-
     public Optional<String> validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return Optional.empty();
         } catch (Exception e){
             return Optional.of(e.getMessage());
-        }
-    }
-    public ResponseCode validateTokenCode(String token){
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return ResponseCode.SUCCESS;
-        }catch (Exception e){
-            return ResponseCode.INVALID_TOKEN;
         }
     }
 
