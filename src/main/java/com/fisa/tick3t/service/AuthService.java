@@ -3,6 +3,7 @@ package com.fisa.tick3t.service;
 import com.fisa.tick3t.domain.dto.LogDto;
 import com.fisa.tick3t.domain.dto.TokenDto;
 import com.fisa.tick3t.domain.dto.UserDto;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.global.StatusCode;
 import com.fisa.tick3t.jwt.JwtUserDetails;
 import com.fisa.tick3t.jwt.TokenProvider;
@@ -30,7 +31,7 @@ public class AuthService {
     private final UserRepository userRepository;
 
 
-    public ResponseDto<?> login(UserDto userDto, String ip) {
+    public ResponseDto<?> login(UserDto userDto, String ip) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try{
             // 유저 email과 password 받아서 UsernamePasswordAuthenticationToken 생성
@@ -59,12 +60,12 @@ public class AuthService {
                 int userId = userRepository.checkEmail(userDto.getEmail());
                 LogDto logDto = new LogDto(userId, ip, StatusCode.LOGIN_FAILURE.getCode());
                 logRepository.insertLog(logDto);
-                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
+                throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
 
                 // 로그인 시도한 Email이 DB에 존재하지 않을 경우 발생하는 에러
             }catch (Exception e2){
                 log.error(e2.getMessage());
-                responseDto.setCode(ResponseCode.UNKNOWN_EMAIL);
+                throw new CustomException(ResponseCode.UNKNOWN_EMAIL);
             }
 
             // 알 수 없는 에러

@@ -30,7 +30,9 @@ public enum ResponseCode {
     NON_EXISTENT_SEAT("6421", "잔여석이 존재하지 않습니다."),
     NON_EXISTENT_RESERVATION("6421", "존재하지 않는 예매 정보입니다."),
     JWT_ERROR("8888", "JWT 에러입니다. 토큰문제임" ),
-    FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요");
+    FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요"),
+    NO_DATA("9998", "데이터가 존재하지 않습니다");
+    // todo: 이 부분을 응답으로 내려줄지 말지.. 고민됩니다.
 
     private final String resultCode;
     private final String message;

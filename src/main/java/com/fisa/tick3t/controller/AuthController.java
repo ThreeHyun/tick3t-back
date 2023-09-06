@@ -1,6 +1,7 @@
 package com.fisa.tick3t.controller;
 
 import com.fisa.tick3t.domain.dto.UserDto;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +13,11 @@ import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequiredArgsConstructor
-//@RequestMapping("/auth")
 public class AuthController {
     public final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseDto<?> login(@RequestBody UserDto userDto, HttpServletRequest request) {
-
+    public ResponseDto<?> login(@RequestBody UserDto userDto, HttpServletRequest request) throws CustomException {
         return authService.login(userDto, request.getRemoteAddr());
     }
 

@@ -1,7 +1,9 @@
 package com.fisa.tick3t.controller;
 
+import com.fisa.tick3t.domain.dto.PageInfo;
 import com.fisa.tick3t.domain.dto.QueryStringDto;
 import com.fisa.tick3t.global.Constants;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
@@ -28,12 +30,12 @@ public class AdminController {
     public ResponseDto<?> selectUsers(@RequestParam(name = "category", required = false) String category,
                                       @RequestParam(name = "word", required = false) String word,
                                       @RequestParam(name = "page", defaultValue = "1") int page) {
-        log.info("category: " + category);
-        log.info("word: " + word);
-        log.info("page: " + page);
+        log.info("selectUsers의 RequestParam 확인");
+        log.info("category: " + category + " word: " + word + " page: " + page);
         ArrayList<String> categories = new ArrayList<>(Arrays.asList("name", "email", "fanCd"));
         QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories, Constants.userPageSize);
-        return adminService.selectUsers(queryStringDto);
+        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), Constants.userPageSize);
+        return adminService.selectUsers(queryStringDto, pageInfo);
     }
 
     @GetMapping("/user/{ID}") // o
@@ -44,7 +46,8 @@ public class AdminController {
 
     @GetMapping("/log/{ID}") // O
     public ResponseDto<?> log(@PathVariable int ID, @RequestParam(name = "page", defaultValue = "1") int page) {
-        return adminService.selectLog(ID, page);
+        PageInfo pageInfo = new PageInfo(page, Constants.logPageSize);
+        return adminService.selectLog(ID, pageInfo);
     }
 
     @GetMapping("/fan")
@@ -55,7 +58,7 @@ public class AdminController {
     @GetMapping("/fan/{fanCd}")
     public ResponseDto<?> selectFanId(@PathVariable(required = false) String fanCd) {
         if (fanCd == null) {
-            fanCd = "IU";
+            fanCd = Constants.defaultFanCd;
         }
         return adminService.dashboardFanId(fanCd);
     }
@@ -67,14 +70,17 @@ public class AdminController {
     }
 
     @GetMapping("/ticket/{ID}")
-    public ResponseDto<?> selectConcertById(@PathVariable String ID) {
-        log.info("ID : "  + ID);
+    public ResponseDto<?> selectConcertById(@PathVariable String ID) throws CustomException {
         try{
             int concertId = Integer.parseInt(ID);
+            if(concertId <= 0){
+                throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            }
             return adminService.dashboardConcertId(concertId);
         }catch (NumberFormatException e){
+            log.info("ID : "  + ID);
             log.error(e.getMessage());
-            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
     }
 }
