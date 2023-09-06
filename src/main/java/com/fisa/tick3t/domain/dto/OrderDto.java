@@ -22,6 +22,7 @@ public class OrderDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime datetime;
     String location;
+    String hallName;
     String payState;
     String seat;
     int price;
