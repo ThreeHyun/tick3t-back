@@ -9,7 +9,8 @@
                cm.concert_id                                                                  as concertId,
                cm.cncr_title                                                                  as title,
                cm.cncr_dtm                                                                    as date,
-               hm.hall_loc                                                                    as location
+               hm.hall_loc                                                                    as location,
+               hm.hall_name                                                                   as hallName
         FROM TCK_CONCERT_M cm
                  JOIN
              TCK_HALL_M hm ON cm.hall_id = hm.hall_id
@@ -23,13 +24,18 @@
                cm.cncr_title     as title,
                cm.cncr_dtm       as date,
                cm.cncr_start_dtm as startDate,
-               hm.hall_loc       as location
+               hm.hall_loc       as location,
+               hm.hall_name      as hallName
         FROM TCK_CONCERT_M cm
                  JOIN
              TCK_HALL_M hm ON cm.hall_id = hm.hall_id
         WHERE concert_id = #{concertId}
     </select>
 
+    <select id="selectConcertsNum" resultType="int">
+        select count(*)
+        from TCK_CONCERT_M
+    </select>
 
     <!-- 5.5 [admin/ticket] 공연 title 조회 -->
     <select id="selectConcertTitle" parameterType="String" resultType="ConcertDto">
@@ -40,13 +46,13 @@
 
     <!-- 5.6 [admin/ticket/{id}] 공연 판매율 모니터링 -->
     <select id="selectConcertRate" parameterType="int" resultType="RateDto">
-        SELECT
-            (SELECT SUM(seat_no)
-             FROM TCK_HALL_SEAT_M
-             WHERE hall_id = (SELECT DISTINCT hall_id FROM CNCR_TICKET_M WHERE concert_id = #{id})) AS totalSeat,
-            (SELECT COUNT(seat_no)
-             FROM CNCR_TICKET_M
-             WHERE concert_id = #{id} AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) AS soldSeat;
+        SELECT (SELECT SUM(seat_no)
+                FROM TCK_HALL_SEAT_M
+                WHERE hall_id = (SELECT DISTINCT hall_id FROM CNCR_TICKET_M WHERE concert_id = #{id})) AS totalSeat,
+               (SELECT COUNT(seat_no)
+                FROM CNCR_TICKET_M
+                WHERE concert_id = #{id}
+                  AND (ticket_status_cd = 0 OR ticket_status_cd = 1))                                  AS soldSeat;
 
 
     </select>

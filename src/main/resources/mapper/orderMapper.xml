@@ -11,6 +11,7 @@
         CM.cncr_title as title,
         CM.cncr_dtm as datetime,
         (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
+        (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
         TM.ticket_status_cd as payState
         FROM CNCR_TICKET_M TM
         JOIN TCK_CONCERT_M CM
@@ -33,6 +34,7 @@
                CM.concert_id                                                           as concertId,
                CM.cncr_title                                                           as title,
                (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
+               (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
                CM.cncr_dtm                                                             as datetime,
                TM.seat_no                                                              as seat,
                TM.ticket_price                                                          as price,
@@ -100,24 +102,26 @@
     <insert id="selectSeat" parameterType="ReservationDto">
         <selectKey resultType="int" keyProperty="canReserve" order="BEFORE" >
             SELECT CASE
-            WHEN COUNT(*) > 0 THEN 1
-            ELSE 0
-            END AS is_valid
+                WHEN COUNT(*) > 0 THEN 1
+                ELSE 0
+                END AS is_valid
             FROM tck_concert_m AS tm
             JOIN tck_user_m AS um ON tm.fan_cd = um.fan_cd
             LEFT JOIN (
-            SELECT * FROM CNCR_TICKET_M
-            WHERE ticket_status_cd = 0 OR ticket_status_cd = 1
-            ) AS ctm ON tm.concert_id = ctm.concert_id AND um.user_id = ctm.customer_id
+                SELECT *
+                    FROM CNCR_TICKET_M
+                    WHERE ticket_status_cd = 0 OR ticket_status_cd = 1
+                ) AS ctm ON tm.concert_id = ctm.concert_id AND um.user_id = ctm.customer_id
             WHERE tm.concert_id = #{concertId}
-            AND um.user_id = #{userId}
-            AND ctm.concert_id IS NULL;
+                AND um.user_id = #{userId}
+                AND ctm.concert_id IS NULL;
         </selectKey>
         <if test="canReserve == 1">
-            INSERT INTO CNCR_TICKET_M (customer_id, concert_id, grade_id, ticket_price, ticket_status_cd, seat_no,
+            INSERT INTO CNCR_TICKET_M (customer_id, concert_id, grade_id, ticket_price, ticket_status_cd,
+                                       seat_no,
                                        hall_id,
                                        pay_dtm)
-            VALUES                    (#{userId}, #{concertId}, #{gradeId}, #{price}, 0,
+            VALUES                    (#{userId}, #{concertId}, #{gradeId},#{price}, 0,
                                       (SELECT MIN(a.seat_no + 1) AS next_available_seat
                                         FROM (
                                             SELECT seat_no
@@ -151,6 +155,18 @@
         FROM tck_concert_m as tm JOIN tck_user_m AS um
                                   ON tm.fan_cd = um.fan_cd
         WHERE tm.concert_id = #{ticketId} AND um.user_id = #{userId}
+    </select>
+
+    <!-- [checkOrder] 팬인지  체크 -->
+    <select id="checkTime">
+        select count(*)
+        From TCK_CONCERT_M
+        where cncr_start_dtm &lt; now() and concert_id = #{concert_id}
+    </select>
+
+    <!-- [price] -->
+    <select id="priceCheck">
+        (select cncr_price from TCK_CONCERT_M where concert_id = #{concertId})
     </select>
 
 </mapper>
