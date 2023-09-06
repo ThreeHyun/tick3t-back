@@ -16,4 +16,5 @@ public class SeatDto {
     int price;
     int remainSeat;
     int totalSeat;
+    int gradeId;
 }

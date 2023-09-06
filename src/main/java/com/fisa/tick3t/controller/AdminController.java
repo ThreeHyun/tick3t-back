@@ -3,6 +3,7 @@ package com.fisa.tick3t.controller;
 import com.fisa.tick3t.domain.dto.QueryStringDto;
 import com.fisa.tick3t.global.Constants;
 import com.fisa.tick3t.global.UtilFunction;
+import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,13 @@ public class AdminController {
 
     @GetMapping("/ticket/{ID}")
     public ResponseDto<?> selectConcertById(@PathVariable String ID) {
-        int concertId = Integer.parseInt(ID);
-        return adminService.dashboardConcertId(concertId);
+        log.info("ID : "  + ID);
+        try{
+            int concertId = Integer.parseInt(ID);
+            return adminService.dashboardConcertId(concertId);
+        }catch (NumberFormatException e){
+            log.error(e.getMessage());
+            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
+        }
     }
 }

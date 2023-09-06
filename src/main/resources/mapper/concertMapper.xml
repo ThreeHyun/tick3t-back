@@ -64,7 +64,7 @@
                sm.seat_no                                     as totalSeat,
                COALESCE(COUNT(ctm.seat_no), 0)                as bookedSeat,
                (sm.seat_no - COALESCE(COUNT(ctm.seat_no), 0)) as remainSeat,
-               sm.grade_id
+               sm.grade_id as gradeId
         FROM TCK_CONCERT_M cm
                  JOIN
              TCK_HALL_SEAT_M sm ON cm.hall_id = sm.hall_id
