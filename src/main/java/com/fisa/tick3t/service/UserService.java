@@ -149,7 +149,7 @@ public class UserService {
             responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.SUCCESS);
+            responseDto.setCode(ResponseCode.FAIL);
         }
         return responseDto;
     }

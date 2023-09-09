@@ -57,7 +57,7 @@ public class AdminController {
 
     @GetMapping("/fan/{fanCd}")
     public ResponseDto<?> selectFanId(@PathVariable(required = false) String fanCd) {
-        if (fanCd == null) {
+        if (fanCd.equals("")) {
             fanCd = Constants.defaultFanCd;
         }
         return adminService.dashboardFanId(fanCd);
