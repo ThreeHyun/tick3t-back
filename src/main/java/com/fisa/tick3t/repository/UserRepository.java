@@ -43,6 +43,8 @@ public interface UserRepository {
 
     ArrayList<String> selectFanCd();
 
+    String checkStatusCode(Integer userId);
+
     //1-5 사용자 팬덤 조회
 //    Integer selectFanJoin(String fanCd);
 //    Integer selectFanWithdraw(String fanCd);

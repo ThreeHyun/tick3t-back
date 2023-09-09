@@ -77,10 +77,13 @@ public class OrderController {
     @PostMapping("/order")
     public ResponseDto<?> selectSeat(Authentication authentication, @RequestBody ReservationDto reservationDto) throws CustomException {
         int userId = getUserIdFromAuthentication(authentication);
-            return orderService.selectSeat(userId, reservationDto);
+        return orderService.selectSeat(userId, reservationDto);
     }
 
     private int getUserIdFromAuthentication(Authentication authentication) throws CustomException {
+        if(authentication == null){
+            throw new CustomException(ResponseCode.JWT_ERROR);
+        }
         Object principal = authentication.getPrincipal();
         if (!(principal instanceof JwtUserDetails)) {
             throw new CustomException(ResponseCode.INVALID_TOKEN);

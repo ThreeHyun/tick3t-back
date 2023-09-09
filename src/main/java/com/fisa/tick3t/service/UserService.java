@@ -184,7 +184,7 @@ public class UserService {
         try {
             // 유저 비밀번호 받아오기
             UserDto userDto = userRepository.selectUser(userId);
-
+            // todo:어떤 url 호출인지, 메인 키워드가 되는 고유 ID, 어떤 유저인지..
             // 비밀번호 체크하기
             if (!util.checkPassword(password, userDto.getUserPwd())) {
                 throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);

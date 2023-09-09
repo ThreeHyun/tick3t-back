@@ -33,6 +33,7 @@ public class AuthService {
 
     public ResponseDto<?> login(UserDto userDto, String ip) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
+        LogDto logDto = new LogDto(ip);
         try{
             // 유저 email과 password 받아서 UsernamePasswordAuthenticationToken 생성
             UsernamePasswordAuthenticationToken authenticationToken = userDto.ToUser(userDto).toAuthentication();
@@ -45,7 +46,8 @@ public class AuthService {
 
             // 로그인한 유저 id와 ip, 상태 정보를 로그 DB에 저장
             int userId = ((JwtUserDetails) authentication.getPrincipal()).getUserId();
-            LogDto logDto = new LogDto(userId, ip, StatusCode.LOGIN.getCode());
+            logDto.setRowNum(userId);
+            logDto.setStatusCode(StatusCode.LOGIN.getCode());
             logRepository.insertLog(logDto);
 
             // jwt 토큰을 반환
@@ -53,22 +55,20 @@ public class AuthService {
             responseDto.setCode(ResponseCode.SUCCESS);
 
             //userEmail과 password가 일치하지 않으면 발생하는 에러
-        } catch(AuthenticationException e) {
-            log.error(e.getMessage());
-            try {
-                // 로그인 실패한 유저 id와 ip, 상태 정보를 로그 DB에 저장
-                int userId = userRepository.checkEmail(userDto.getEmail());
-                LogDto logDto = new LogDto(userId, ip, StatusCode.LOGIN_FAILURE.getCode());
-                logRepository.insertLog(logDto);
-                throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
-
-                // 로그인 시도한 Email이 DB에 존재하지 않을 경우 발생하는 에러
-            }catch (Exception e2){
-                log.error(e2.getMessage());
+        }
+        catch(AuthenticationException e) {
+            Integer userId = userRepository.checkEmail(userDto.getEmail());
+            if(userId == null) {
                 throw new CustomException(ResponseCode.UNKNOWN_EMAIL);
             }
-
-            // 알 수 없는 에러
+            String statusCd = userRepository.checkStatusCode(userId);
+            if(statusCd.equals("D")){
+                throw new CustomException(ResponseCode.WITHDRAWN_USER);
+            }
+            logDto.setRowNum(userId);
+            logDto.setStatusCode(StatusCode.LOGIN_FAILURE.getCode());
+            logRepository.insertLog(logDto);
+            throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
         } catch (Exception e){
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);

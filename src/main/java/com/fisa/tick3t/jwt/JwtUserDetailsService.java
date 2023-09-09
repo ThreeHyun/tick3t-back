@@ -2,7 +2,9 @@ package com.fisa.tick3t.jwt;
 
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.domain.vo.User;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.repository.UserRepository;
+import com.fisa.tick3t.response.ResponseCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,10 +25,12 @@ public class JwtUserDetailsService implements UserDetailsService {
         try {
             int userId = userRepository.checkEmail(username);
             UserDto userDto = userRepository.selectUser(userId);
+            if(userDto.getStatusCd().equals("D")){
+                throw new CustomException(ResponseCode.WITHDRAWN_USER);
+            }
             User user = userDto.ToUser(userDto);
             return new JwtUserDetails(user);
-        }catch (UsernameNotFoundException e){
-            e.printStackTrace();
+        } catch (UsernameNotFoundException | CustomException e ) {
             log.error(e.getMessage());
             return null;
         }

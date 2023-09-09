@@ -28,6 +28,12 @@
           and user_birth = #{birth}
     </select>
 
+    <select id="checkStatusCode" parameterType="Integer" resultType="String">
+        SELECT user_status_cd
+        FROM TCK_USER_M
+        WHERE user_id = #{userId}
+    </select>
+
     <!-- 4.1 [/profile] 유저의 회원 내정보 조회 -->
     <!-- password는 null로 set, name과 email은 마스킹처리 후 반환-->
     <select id="selectProfile" parameterType="int" resultType="ProfileDto">
@@ -123,14 +129,14 @@
     <!-- pwd와 role은 null로 set하고 name과 email은 masking처리 후 반환-->
     <select id="selectUser" parameterType="int" resultType="UserDto">
         SELECT user_id,
-               user_name as name,
-               user_email as email,
+               user_name      as name,
+               user_email     as email,
                user_pwd,
-               user_birth as birth,
+               user_birth     as birth,
                fan_id,
                fan_cd,
                user_status_cd as statusCd,
-               create_dtm as createDate,
+               create_dtm     as createDate,
                role
         from TCK_USER_M
         where user_id = #{userId}
@@ -138,38 +144,38 @@
 
     <!-- 5.4 [admin/fan] 팬덤 List 내려주기 -->
     <select id="selectFanCd" resultType="String">
-        SELECT distinct fan_cd FROM TCK_USER_M
+        SELECT distinct fan_cd
+        FROM TCK_USER_M
     </select>
 
 
     <!-- 5.4 [admin/fan/{fancd}] 가입, 탈퇴, 1주일 내에 가입한 팬덤별 인원 조회(ㅑㅜ-->
     <select id="selectFanSum" parameterType="String" resultType="FanCountDto">
-        SELECT
-            COUNT(*) AS joinUser,
-            SUM(CASE WHEN user_status_cd = 'D' THEN 1 ELSE 0 END) AS withdrawUser,
-            SUM(CASE WHEN create_dtm >= DATE_SUB(NOW(), INTERVAL 1 WEEK) THEN 1 ELSE 0 END) AS weekUser
+        SELECT COUNT(*)                                                                        AS joinUser,
+               SUM(CASE WHEN user_status_cd = 'D' THEN 1 ELSE 0 END)                           AS withdrawUser,
+               SUM(CASE WHEN create_dtm >= DATE_SUB(NOW(), INTERVAL 1 WEEK) THEN 1 ELSE 0 END) AS weekUser
         FROM TCK_USER_M
         WHERE fan_cd = #{fanCd}
     </select>
 </mapper>
 
 
-    <!--  [/admin/fanCd/{fanCd} 어드민이 팬덤 정보를 조회하는 쿼리 -->
-    <!--    <select id="selectFanJoin" parameterType="String" resultType="java.lang.Integer">-->
-    <!--        SELECT COUNT(*)-->
-    <!--        FROM TCK_USER_M-->
-    <!--        WHERE fan_cd = #{fanCd}-->
-    <!--    </select>-->
-    <!--    <select id="selectFanWithdraw" parameterType="String" resultType="java.lang.Integer">-->
-    <!--        SELECT COUNT(*)-->
-    <!--        FROM TCK_USER_M-->
-    <!--        WHERE fan_cd = #{fanCd}-->
-    <!--        AND user_status_cd = 'D'-->
-    <!--    </select>-->
-    <!--    <select id="selectFanWeek" parameterType="String" resultType="java.lang.Integer">-->
-    <!--        SELECT COUNT(*)-->
-    <!--        FROM TCK_USER_M-->
-    <!--        WHERE fan_cd = #{fanCd}-->
-    <!--        AND create_dtm >= DATE_SUB(NOW(), INTERVAL 1 WEEK);-->
-    <!--    </select>-->
+        <!--  [/admin/fanCd/{fanCd} 어드민이 팬덤 정보를 조회하는 쿼리 -->
+        <!--    <select id="selectFanJoin" parameterType="String" resultType="java.lang.Integer">-->
+        <!--        SELECT COUNT(*)-->
+        <!--        FROM TCK_USER_M-->
+        <!--        WHERE fan_cd = #{fanCd}-->
+        <!--    </select>-->
+        <!--    <select id="selectFanWithdraw" parameterType="String" resultType="java.lang.Integer">-->
+        <!--        SELECT COUNT(*)-->
+        <!--        FROM TCK_USER_M-->
+        <!--        WHERE fan_cd = #{fanCd}-->
+        <!--        AND user_status_cd = 'D'-->
+        <!--    </select>-->
+        <!--    <select id="selectFanWeek" parameterType="String" resultType="java.lang.Integer">-->
+        <!--        SELECT COUNT(*)-->
+        <!--        FROM TCK_USER_M-->
+        <!--        WHERE fan_cd = #{fanCd}-->
+        <!--        AND create_dtm >= DATE_SUB(NOW(), INTERVAL 1 WEEK);-->
+        <!--    </select>-->
 

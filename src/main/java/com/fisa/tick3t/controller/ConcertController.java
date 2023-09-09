@@ -20,7 +20,6 @@ public class ConcertController {
 
     @GetMapping("/concert")
     public ResponseDto<?> selectConcerts(@RequestParam(name = "page", defaultValue = "1") int page) {
-        // 페이징용 객체 생성
         PageInfo pageInfo = new PageInfo(page, Constants.concertPageSize);
         return concertService.selectConcerts(pageInfo);
     }

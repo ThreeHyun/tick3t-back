@@ -16,6 +16,7 @@ public class CorsConfig {
         config.setAllowCredentials(true);
         //config.addAllowedOrigin("*");
         config.addAllowedOrigin("http://localhost:3000");
+        config.addAllowedOrigin("http://tick-3t.com");
         config.addAllowedHeader("Content-Type");
         config.addAllowedHeader("Authorization");
         config.addAllowedMethod("GET");
