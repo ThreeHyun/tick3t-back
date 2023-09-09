@@ -2,7 +2,7 @@ package com.fisa.tick3t.service;
 
 
 import com.fisa.tick3t.domain.dto.*;
-import com.fisa.tick3t.global.Constants;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.repository.OrderRepository;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
@@ -25,11 +25,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
 
-    public ResponseDto<?> selectOrders(int userId, QueryStringDto queryStringDto) {
+    public ResponseDto<?> selectOrders(int userId, QueryStringDto queryStringDto, PageInfo pageInfo) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
-
-        // 페이징용 객체 생성
-        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), Constants.concertPageSize);
         try {
             // 검색 예매내역 수 조회
             pageInfo.setTotalElement(orderRepository.selectOrderNum(queryStringDto, userId));
@@ -61,13 +58,15 @@ public class OrderService {
 
             // 반환값이 null이라면 없는 예매내역 결과 반환
             if (orderDto == null) {
-                responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
-                return responseDto;
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
             }
 
             // 조회 결과 반환
             responseDto.setData(orderDto);
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -84,10 +83,12 @@ public class OrderService {
 
             // update된 내역이 없다면 존재하지 않는 예매정보 반환
             if(result == 0){
-                responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
-                return responseDto;
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
             }
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -104,10 +105,12 @@ public class OrderService {
 
             // update된 내역이 없다면 존재하지 않는 예매정보 반환
             if(result == 0){
-                responseDto.setCode(ResponseCode.NON_EXISTENT_RESERVATION);
-                return responseDto;
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
             }
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -116,7 +119,7 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseDto<?> selectSeat(int userId, ReservationDto reservationDto) {
+    public ResponseDto<?> selectSeat(int userId, ReservationDto reservationDto) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         reservationDto.setUserId(userId);
         try {
@@ -126,18 +129,18 @@ public class OrderService {
         } catch (DataIntegrityViolationException e) {
             // 잔여석이 존재하지 않을 경우 에러 반환
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.NON_EXISTENT_SEAT);
+            throw new CustomException(ResponseCode.NON_EXISTENT_SEAT);
         } catch (DataAccessException e) {
             // 팬클럽이 아니라거나 이미 예매 내역이 있을 경우
             if (e.getCause() instanceof SQLException) {
                 log.error(e.getMessage());
-                responseDto.setCode(ResponseCode.INVALID_FAN_ID);
-                return responseDto;
+                throw new CustomException(ResponseCode.EXCEED_TICKET_LIMIT);
+                //todo: 팬클럽 아니다 / 예매내역 있다 둘 다 반환할 error 코드 만들기
             } else {
                 log.error(e.getMessage());
                 responseDto.setCode(ResponseCode.FAIL);
             }
-        } catch (Exception e) {
+        }  catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }

@@ -18,7 +18,7 @@ public class SchedulerService {
         try {
             orderRepository.cancelOrders();
         }catch (Exception e){
-            log.error("결제되는 내역을 취소하는 과정에서 에러가 발생했습니다.");
+            log.error("결제기한이 지난 예매 내역을 취소하는 과정에서 에러가 발생했습니다.");
             log.error(e.getMessage());
         }
     }

@@ -3,6 +3,7 @@ package com.fisa.tick3t.service;
 import com.fisa.tick3t.domain.dto.PasswordDto;
 import com.fisa.tick3t.domain.dto.ProfileDto;
 import com.fisa.tick3t.domain.dto.TokenDto;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.jwt.TokenProvider;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.domain.dto.UserDto;
@@ -12,17 +13,11 @@ import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.mail.SendFailedException;
-import javax.mail.internet.MimeMessage;
 
 @Slf4j
 @Service
@@ -31,41 +26,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UtilFunction util;
-    private final JavaMailSender javaMailSender;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final TokenProvider tokenProvider;
 
-    @Value("${spring.mail.username}")
-    private String from;
-
-    // 2.1 [signup] 회원가입
+    // 2.1 [signup] 회원가입 --- 0
     @Transactional
-    public ResponseDto<ResponseCode> signUp(User user) {
+    public ResponseDto<ResponseCode> signUp(User user) throws CustomException {
         ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
         String userPwd = user.getUserPwd();
         String userEmail = user.getEmail();
-        // 파라미터 완전성 검사
-        if (userPwd == null || userEmail == null || user.getName() == null) {
-            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
-            log.info("userPwd : " + userPwd);
-            log.info("userEmail : " + userEmail);
-            log.info("Name : " + user.getName());
-            return responseDto;
-        }
-        // 파라미터 유효성 검사
-        if (!util.isValidPassword(userPwd) || !util.isValidEmail(userEmail) || user.getName().length() > 5) {
-            log.info("패스워드 형식이 일치하나요? :" + userPwd );
-            log.info("이메일 형식이 일치하나요? :" + userEmail );
-            log.info("유저 name이 5자를 초과하나요? :" + user.getName() );
-            responseDto.setCode(ResponseCode.INVALID_DATA);
-            return responseDto;
-        }
 
         // 중복된 이메일일 경우
         if (userRepository.checkEmail(userEmail) != null) {
-            responseDto.setCode(ResponseCode.EMAIL_ALREADY_IN_USE);
-            return responseDto;
+            throw new CustomException(ResponseCode.EMAIL_ALREADY_IN_USE);
         }
 
         // password를 hashing하고 UserDto에 저장
@@ -77,59 +51,40 @@ public class UserService {
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (Exception e) {
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.FAIL);
+            throw new CustomException(ResponseCode.FAIL);
         }
         return responseDto;
 
     }
 
 
-    // 2.4 [reissue] 비밀번호 재발급
+    // 2.4 [reissue] 비밀번호 재발급 --- 0
     @Transactional
     public ResponseDto<ResponseCode> resetPassword(User user) {
         ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
-        String userBirth = user.getBirth();
-        String userName = user.getName();
         String userEmail = user.getEmail();
-
-        // 파라미터 완전성 검사
-        if (userEmail == null || userName == null || userBirth == null) {
-            responseDto.setCode(ResponseCode.MISSING_OR_INVALID_REQUEST);
-            log.info("userEmail : " + userEmail );
-            log.info("userName : " + userName );
-            log.info("userBirth : " + userBirth );
-            return responseDto;
-        }
         try {
-            //파라미터 유효성 검사
+            //파라미터 유효성 검사 (존재하는 유저인지 판단)
             Integer userId = userRepository.checkUser(user);
 
-            // ID를 받아오지 못했다면 일치하지 않는 유저 정보 반환
+            // ID를 받아오지 못했다면 일치하지 않는 유저 정보 에러 반환
             if (userId == null) {
-                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
-                return responseDto;
+                throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
             }
 
             // 새 패스워드 생성
             String password = util.generatePassword();
 
             // 메일링처리
-            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            mimeMessageHelper.setFrom(from);
-            mimeMessageHelper.setTo(userEmail);
-            mimeMessageHelper.setSubject("[TICK3T] | 임시비밀번호 안내");
-            String body = "회원님의 임시 비밀번호는 " + password + " 입니다.";
-            mimeMessageHelper.setText(body);
-            javaMailSender.send(mimeMessage);
+            util.mailingPassword(userEmail, password);
 
             // 패스워드 해싱 및 업데이트
             PasswordDto passwordDto = new PasswordDto(userId, util.hashPassword(password));
             userRepository.updatePassword(passwordDto);
             responseDto.setCode(ResponseCode.SUCCESS);
-        } catch (SendFailedException e){
+        } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.UNKNOWN_EMAIL);
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -137,23 +92,27 @@ public class UserService {
         return responseDto;
     }
 
-    // 4.1 [profile] 회원 내정보 조회
+    // 4.1 [profile] 회원 내정보 조회 --- 0
     public ResponseDto<ProfileDto> profile(int userId) {
         ResponseDto<ProfileDto> responseDto = new ResponseDto<>();
         try {
             // 회원 정보 조회
             ProfileDto profileDto = userRepository.selectProfile(userId);
+
             // null이라면 존재하지 않는 회원 반환
             if (profileDto == null) {
-                responseDto.setCode(ResponseCode.NON_EXISTENT_USER);
-                return responseDto;
+                throw new CustomException(ResponseCode.NON_EXISTENT_USER);
             }
 
             // 마스킹처리
             profileDto.setEmail(util.emailMasking(profileDto.getEmail()));
             profileDto.setName(util.nameMasking(profileDto.getName()));
+
             responseDto.setCode(ResponseCode.SUCCESS);
             responseDto.setData(profileDto);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -161,30 +120,20 @@ public class UserService {
         return responseDto;
     }
 
-    // 4.2 [profile/password] 회원 비밀번호 변경
+    // 4.2 [profile/password] 회원 비밀번호 변경 --- 0
     @Transactional
     public ResponseDto<Object> changePassword(int userId, PasswordDto passwordDto) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
-        String newPwd = passwordDto.getNewPassword();
-        String oldPwd = passwordDto.getOldPassword();
-        // // 파라미터 완전성, 유효성 검사
-        if (newPwd.equals(oldPwd) || !newPwd.equals(passwordDto.getNewPasswordCheck()) || !util.isValidPassword(newPwd)) {
-            log.info(oldPwd + " " + newPwd + " ");
-            log.info("패스워드 형식이 일치하나요? : " + util.isValidPassword(newPwd));
-            responseDto.setCode(ResponseCode.INVALID_DATA);
-            return responseDto;
-        }
+
         try {
             //db에서 유저 ID로 UserDto 가져오기
             UserDto userDto = userRepository.selectUser(userId);
             //비밀번호 체킹
-            if (!util.checkPassword(oldPwd, userDto.getUserPwd())) {
-                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
-                return responseDto;
+            if (!util.checkPassword(passwordDto.getOldPassword(), userDto.getUserPwd())) {
+                throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
             }
-
             // 일치한다면 새 비밀번호 해싱
-            passwordDto.setNewPassword(util.hashPassword(newPwd));
+            passwordDto.setNewPassword(util.hashPassword(passwordDto.getNewPassword()));
             passwordDto.setUserId(userId);
             // 해싱한 비밀번호 DB에 저장
             userRepository.updatePassword(passwordDto);
@@ -195,35 +144,33 @@ public class UserService {
             TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
             responseDto.setData(tokenDto.getAccessToken());
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.FAIL);
+            responseDto.setCode(ResponseCode.SUCCESS);
         }
         return responseDto;
     }
 
 
-    // 4.3 [profile/fanid] 회원 팬클럽 인증 번호 변경
+    // 4.3 [profile/fanid] 회원 팬클럽 인증 번호 변경 --- 0
     @Transactional
     public ResponseDto<ResponseCode> changeFanId(int userId, String fanId) {
         ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
-
-        // 파라미터 완전성, 유효성 검사
-        if (fanId.length() != 8) {
-            responseDto.setCode(ResponseCode.INVALID_DATA);
-            return responseDto;
-        }
-
         try {
             //받아온 fanID가 중복되지 않는지 검증
             if (userRepository.checkFanId(fanId) != null) {
-                responseDto.setCode(ResponseCode.INVALID_FAN_ID);
-                return responseDto;
+                throw new CustomException(ResponseCode.INVALID_FAN_ID);
             }
             //중복되지 않으면 업데이트
             UserDto userDto = new UserDto(userId, fanId);
             responseDto.setCode(ResponseCode.SUCCESS);
             userRepository.updateFanId(userDto);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -231,41 +178,44 @@ public class UserService {
         return responseDto;
     }
 
-
-    @Transactional
-    public ResponseDto<?> withdraw(int userId, String password) {
+    // 4.4 [profile/withdraw] 회원 탈퇴
+    public ResponseDto<?> canWithdraw(int userId, String password) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // 유저 비밀번호 받아오기
             UserDto userDto = userRepository.selectUser(userId);
-
+            // todo:어떤 url 호출인지, 메인 키워드가 되는 고유 ID, 어떤 유저인지..
             // 비밀번호 체크하기
-            if (!util.checkPassword(password, userDto.getUserPwd()) ) {
-                responseDto.setCode(ResponseCode.MISMATCHED_USER_INFO);
-                return responseDto;
-                // todo: throw new customException(코드); + customExceptionHandler 만들기
+            if (!util.checkPassword(password, userDto.getUserPwd())) {
+                throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
             }
 
             //탈퇴 상태 체크하기
-            if(userDto.getStatusCd().equals("D")){
-                responseDto.setCode(ResponseCode.WITHDRAWN_USER);
-                return responseDto;
+            if (userDto.getStatusCd().equals("D")) {
+                throw new CustomException(ResponseCode.WITHDRAWN_USER);
             }
 
             //예매 정보 체크하기
             int orderNum = userRepository.checkOrder(userId);
-            if(orderNum != 0){
-                responseDto.setCode(ResponseCode.CANNOT_WITHDRAW);
-                return responseDto;
+            if (orderNum != 0) {
+                throw new CustomException(ResponseCode.CANNOT_WITHDRAW);
             }
             // 같으면 삭제시킵니다.
-            userRepository.withdraw(userId);
+            withdraw(userId);
             responseDto.setCode(ResponseCode.SUCCESS);
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }
         return responseDto;
+    }
+
+    @Transactional
+    public void withdraw(int userId) {
+        userRepository.withdraw(userId);
     }
 
 }

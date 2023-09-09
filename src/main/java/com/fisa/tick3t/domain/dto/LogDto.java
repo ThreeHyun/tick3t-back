@@ -26,4 +26,8 @@ public class LogDto {
         this.rowNum = userId;
     }
 
+    public LogDto(String ip){
+        this.accessIp = ip;
+    }
+
 }

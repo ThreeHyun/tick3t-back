@@ -3,10 +3,18 @@ package com.fisa.tick3t.global;
 import com.fisa.tick3t.domain.dto.QueryStringDto;
 import com.fisa.tick3t.domain.dto.RateDto;
 import com.fisa.tick3t.domain.dto.UserDto;
+import com.fisa.tick3t.response.ResponseCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.internet.MimeMessage;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -20,6 +28,13 @@ public class UtilFunction {
 
 
     static BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+
+    @Value("${spring.mail.username}")
+    private String from;
 
     public String emailMasking(String email) {
         StringBuilder masking = new StringBuilder();
@@ -143,4 +158,24 @@ public class UtilFunction {
         userDto.setStatusCd(codeToStatusDesc(userDto.getStatusCd()));
     }
 
+    public void mailingPassword(String userEmail, String password) throws CustomException {
+        try {
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            mimeMessageHelper.setFrom(from);
+            mimeMessageHelper.setTo(userEmail);
+            mimeMessageHelper.setSubject(Constants.defaultMailTitle);
+            String body = "회원님의 임시 비밀번호는 " + password + " 입니다.";
+            mimeMessageHelper.setText(body);
+            javaMailSender.send(mimeMessage);
+        }
+        catch (SendFailedException e){
+            log.error(e.getMessage());
+            throw new CustomException(ResponseCode.UNKNOWN_EMAIL);
+        } catch (MessagingException e) {
+            log.error(e.getMessage());
+            log.error("메일링 과정에서 에러가 발생했습니다. 로그인 정보나 SMTP를 점검해주세요.");
+            throw new CustomException(ResponseCode.FAIL);
+        }
+    }
 }

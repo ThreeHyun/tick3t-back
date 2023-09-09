@@ -1,10 +1,9 @@
 package com.fisa.tick3t.service;
 
 import com.fisa.tick3t.domain.dto.ConcertDto;
-import com.fisa.tick3t.domain.dto.ConcertPageDto;
 import com.fisa.tick3t.domain.dto.PageInfo;
 import com.fisa.tick3t.domain.dto.SeatDto;
-import com.fisa.tick3t.global.Constants;
+import com.fisa.tick3t.global.CustomException;
 import com.fisa.tick3t.repository.ConcertRepository;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
@@ -24,17 +23,15 @@ public class ConcertService {
 
 
     // 3.1 [concert] 공연 목록 조회
-    public ResponseDto<?> selectConcerts(int page){
+    public ResponseDto<?> selectConcerts(PageInfo pageInfo){
         ResponseDto<Object> responseDto = new ResponseDto<>();
-        // 페이징용 객체 생성
-        PageInfo pageInfo = new PageInfo(page, Constants.concertPageSize);
         try {
             // 콘서트 수 조회
             pageInfo.setTotalElement(concertRepository.selectConcertsNum());
             // 콘서트 정보 조회
             List<ConcertDto> concerts = concertRepository.selectConcerts(pageInfo);
-            ConcertPageDto concertPage = new ConcertPageDto(pageInfo, concerts);
-            responseDto.setData(concertPage);
+            //ConcertPageDto concertPage = new ConcertPageDto(pageInfo, concerts);
+            responseDto.setData(concerts);
             responseDto.setCode(ResponseCode.SUCCESS);
         }catch (Exception e){
             log.error(e.getMessage());
@@ -53,8 +50,7 @@ public class ConcertService {
 
             // 조회된 값이 없다면 존재하지 않는 공연 에러코드 반환
             if(concertDto == null){
-                responseDto.setCode(ResponseCode.NON_EXISTENT_CONCERT);
-                return responseDto;
+                throw new CustomException(ResponseCode.NON_EXISTENT_CONCERT);
             }
 
             // 콘서트가 존재한다면 좌석정보 조회
@@ -64,7 +60,10 @@ public class ConcertService {
             concertDto.setSeats(seatDto);
             responseDto.setData(concertDto);
             responseDto.setCode(ResponseCode.SUCCESS);
-        }catch (Exception e){
+        } catch (CustomException e) {
+            log.error(e.getMessage());
+            responseDto.setCode(e.getResponseCode());
+        } catch (Exception e){
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }

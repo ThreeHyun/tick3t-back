@@ -1,5 +1,7 @@
 package com.fisa.tick3t.controller;
 
+import com.fisa.tick3t.domain.dto.PageInfo;
+import com.fisa.tick3t.global.Constants;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.service.ConcertService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,8 @@ public class ConcertController {
 
     @GetMapping("/concert")
     public ResponseDto<?> selectConcerts(@RequestParam(name = "page", defaultValue = "1") int page) {
-        return concertService.selectConcerts(page);
+        PageInfo pageInfo = new PageInfo(page, Constants.concertPageSize);
+        return concertService.selectConcerts(pageInfo);
     }
 
     @GetMapping("/concert/{ID}")

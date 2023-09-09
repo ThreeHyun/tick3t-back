@@ -12,7 +12,8 @@
         CM.cncr_dtm as datetime,
         (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
         (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
-        TM.ticket_status_cd as payState
+        TM.ticket_status_cd as payState,
+        CM.cncr_img_url                                                          as imgUrl
         FROM CNCR_TICKET_M TM
         JOIN TCK_CONCERT_M CM
         on CM.concert_id = TM.concert_id
@@ -40,7 +41,8 @@
                TM.ticket_price                                                          as price,
                CM.cncr_cancel_date                                                     as cancelDate,
                TM.ticket_status_cd                                                      as payState,
-               TM.pay_dtm                                                               as payDtm
+               TM.pay_dtm                                                               as payDtm,
+               CM.cncr_img_url                                                          as imgUrl
         FROM CNCR_TICKET_M TM
                  JOIN TCK_CONCERT_M CM
                       on CM.concert_id = TM.concert_id
@@ -105,8 +107,8 @@
                 WHEN COUNT(*) > 0 THEN 1
                 ELSE 0
                 END AS is_valid
-            FROM tck_concert_m AS tm
-            JOIN tck_user_m AS um ON tm.fan_cd = um.fan_cd
+            FROM TCK_CONCERT_M AS tm
+            JOIN TCK_USER_M AS um ON tm.fan_cd = um.fan_cd
             LEFT JOIN (
                 SELECT *
                     FROM CNCR_TICKET_M
@@ -152,7 +154,7 @@
     <!-- [checkOrder] 팬인지  체크-->
     <select id="checkFanCd" parameterType="Map" resultType="int">
         SELECT count(tm.fan_cd)
-        FROM tck_concert_m as tm JOIN tck_user_m AS um
+        FROM TCK_CONCERT_M as tm JOIN TCK_USER_M AS um
                                   ON tm.fan_cd = um.fan_cd
         WHERE tm.concert_id = #{ticketId} AND um.user_id = #{userId}
     </select>
