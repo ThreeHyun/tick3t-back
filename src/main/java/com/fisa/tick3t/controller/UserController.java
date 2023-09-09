@@ -29,11 +29,11 @@ public class UserController {
         String userPwd = user.getUserPwd();
         String userEmail = user.getEmail();
         // 파라미터 완전성 검사
-        if (userPwd == null || userEmail == null || user.getName() == null) {
+        if (userPwd.equals("") || userEmail.equals("") || user.getName().equals("")) {
             log.info("userPwd : " + userPwd);
             log.info("userEmail : " + userEmail);
             log.info("Name : " + user.getName());
-            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
 
         // 파라미터 유효성 검사
@@ -47,17 +47,17 @@ public class UserController {
     }
 
     @PostMapping("/reset-password") // O 메일링 처리하기
-    public ResponseDto<?> reissue(@RequestBody User user) throws CustomException {
+    public ResponseDto<?> reissue(@RequestBody User user){
         String userBirth = user.getBirth();
         String userName = user.getName();
         String userEmail = user.getEmail();
-
         // 파라미터 완전성 검사
-        if (userEmail == null || userName == null || userBirth == null) {
+        if (userEmail.equals("") || userName.equals("") || userBirth.equals("")) {
             log.info("userEmail : " + userEmail);
             log.info("userName : " + userName);
             log.info("userBirth : " + userBirth);
-            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            //throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
         return userService.resetPassword(user);
     }
@@ -77,7 +77,7 @@ public class UserController {
         if (newPwd.equals(oldPwd) || !newPwd.equals(passwordDto.getNewPasswordCheck()) || !util.isValidPassword(newPwd)) {
             log.info(oldPwd + " " + newPwd + " ");
             log.info("패스워드 형식이 일치하나요? : " + util.isValidPassword(newPwd));
-            throw new CustomException(ResponseCode.INVALID_DATA);
+            return new ResponseDto<>(ResponseCode.INVALID_DATA);
         }
         int userId = getUserIdFromAuthentication(authentication);
         return userService.changePassword(userId, passwordDto);
