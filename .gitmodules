@@ -1,0 +1,3 @@
+[submodule "tick3t-back-submodule"]
+	path = tick3t-back-submodule
+	url = https://github.com/ThreeHyun/tick3t-back-submodule.git
