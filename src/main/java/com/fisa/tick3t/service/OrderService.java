@@ -13,7 +13,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.fisa.tick3t.global.PayCode.codeToPayDesc;
 
@@ -57,7 +59,7 @@ public class OrderService {
 
             // 반환값이 null이라면 없는 예매내역 결과 반환
             if (orderDto == null) {
-                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION); //400
             }
 
             // 조회 결과 반환
@@ -65,7 +67,7 @@ public class OrderService {
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            responseDto.setCode(e.getResponseCode()); //200
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -125,6 +127,11 @@ public class OrderService {
         try {
             // 랜덤 좌석 선택 후 저장
             orderRepository.selectSeat(reservationDto);
+            int result = orderRepository.selectTicketId(userId, reservationDto.getConcertId());
+            Map<String, Integer> map = new HashMap<>();
+            // 키-값 쌍을 추가
+            map.put("ticketId", result);
+            responseDto.setData(map);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (DataIntegrityViolationException e) {
             // 잔여석이 존재하지 않을 경우 에러 반환

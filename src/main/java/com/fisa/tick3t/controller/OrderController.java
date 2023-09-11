@@ -36,14 +36,15 @@ public class OrderController {
         log.info("category: " + category + " word: " + word + " page: " + page);
         int userId = getUserIdFromAuthentication(authentication);
         ArrayList<String> categories = new ArrayList<>(Arrays.asList("결제 대기", "결제 완료", "예매 취소", "결제 취소"));
-        QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories, 3);
-        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), Constants.concertPageSize);
+        QueryStringDto queryStringDto = util.checkQuery(category, word, page, categories, Constants.orderPageSize);
+        PageInfo pageInfo = new PageInfo(queryStringDto.getPage(), Constants.orderPageSize);
         return orderService.selectOrders(userId, queryStringDto, pageInfo);
     }
 
 
     @GetMapping("/myorder/{ID}")
     public ResponseDto<?> selectOrder(Authentication authentication, @PathVariable int ID) throws CustomException {
+        ID = util.isValidParam(ID);
         int userId = getUserIdFromAuthentication(authentication);
         return orderService.selectOrder(userId, ID);
 
@@ -52,7 +53,10 @@ public class OrderController {
     @PostMapping("/myorder/cancel")
     public ResponseDto<?> cancelOrder(Authentication authentication, @RequestBody OrderDto orderDto) throws CustomException {
         int userId = getUserIdFromAuthentication(authentication);
-        int ticketId = orderDto.getTicketId();
+        if (orderDto == null || orderDto.getTicketId() == 0) {
+            return new ResponseDto<>(ResponseCode.NON_EXISTENT_RESERVATION);
+        }
+        int ticketId = util.isValidParam(orderDto.getTicketId());
         return orderService.cancelOrder(userId, ticketId);
     }
 
@@ -61,15 +65,16 @@ public class OrderController {
     public ResponseDto<?> payOrder(Authentication authentication, @RequestBody OrderDto orderDto) throws CustomException {
         int userId = getUserIdFromAuthentication(authentication);
         if (orderDto == null || orderDto.getTicketId() == 0) {
-            throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
+            return new ResponseDto<>(ResponseCode.NON_EXISTENT_RESERVATION);
         }
-        int ticketId = orderDto.getTicketId();
+        int ticketId = util.isValidParam(orderDto.getTicketId());
         return orderService.payOrder(userId, ticketId);
 
     }
 
     @GetMapping("/order/check/{ID}")
     public ResponseDto<?> checkOrder(Authentication authentication, @PathVariable int ID) throws CustomException {
+        ID = util.isValidParam(ID);
         int userId = getUserIdFromAuthentication(authentication);
         return orderService.checkOrder(userId, ID);
     }
@@ -77,6 +82,9 @@ public class OrderController {
     @PostMapping("/order")
     public ResponseDto<?> selectSeat(Authentication authentication, @RequestBody ReservationDto reservationDto) throws CustomException {
         int userId = getUserIdFromAuthentication(authentication);
+        if (reservationDto == null) {
+            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
+        }
         return orderService.selectSeat(userId, reservationDto);
     }
 

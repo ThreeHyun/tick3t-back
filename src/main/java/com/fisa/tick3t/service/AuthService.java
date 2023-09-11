@@ -69,9 +69,9 @@ public class AuthService {
             logDto.setStatusCode(StatusCode.LOGIN_FAILURE.getCode());
             logRepository.insertLog(logDto);
             throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);
-        } catch (Exception e){
+        }catch (Exception e){
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.FAIL);
+            throw new CustomException(ResponseCode.FAIL);
         }
         return responseDto;
     }

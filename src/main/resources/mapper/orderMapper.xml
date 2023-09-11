@@ -25,7 +25,7 @@
             AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
         </if>
         ORDER BY resv_dtm
-        LIMIT ${@com.fisa.tick3t.global.Constants@concertPageSize} OFFSET #{queryStringDto.offset}
+        LIMIT ${@com.fisa.tick3t.global.Constants@orderPageSize} OFFSET #{queryStringDto.offset}
     </select>
 
 
@@ -102,24 +102,24 @@
     <!-- [/order] 조건에 맞을 경우 예매하기 -->
     <insert id="selectSeat" parameterType="ReservationDto">
         <selectKey resultType="int" keyProperty="canReserve" order="BEFORE">
-                SELECT CASE
-                -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
-                WHEN (SELECT fan_cd FROM tck_user_m WHERE user_id = #{userId}) !=
-                (SELECT fan_cd FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 1
+            SELECT CASE
+            -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
+            WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
+            (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
 
-                -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
-                WHEN (SELECT COUNT(reservation_id)
-                FROM cncr_ticket_m
-                WHERE customer_id = #{userId} AND concert_id = #{concertId}
-                AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
+            -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
+            WHEN (SELECT COUNT(reservation_id)
+            FROM CNCR_TICKET_M
+            WHERE customer_id = #{userId} AND concert_id = #{concertId}
+            AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
 
-                -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
-                WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 3
-                WHEN NOW() >= (SELECT cncr_cancel_date FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 3
+            -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
+            WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+            WHEN NOW() >= (SELECT cncr_cancel_date FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
 
-                -- 모든 조건이 만족하는 경우
-                ELSE 0
-                END
+            -- 모든 조건이 만족하는 경우
+            ELSE 0
+            END
         </selectKey>
         <if test="canReserve == 0">
             INSERT INTO CNCR_TICKET_M (customer_id, concert_id, grade_id, ticket_price, ticket_status_cd,
@@ -146,25 +146,34 @@
         </if>
     </insert>
 
+    <select id="selectTicketId" parameterType="Map" resultType="int">
+        SELECT reservation_id
+        FROM CNCR_TICKET_M
+        WHERE customer_id = #{userId}
+          AND concert_id = #{concertId}
+          AND ticket_status_cd = 0;
+    </select>
+
     <select id="checkOrder" parameterType="Map" resultType="int">
         SELECT CASE
-           -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
-           WHEN (SELECT fan_cd FROM tck_user_m WHERE user_id = #{userId}) !=
-                (SELECT fan_cd FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 1
+                   -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
+                   WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
+                        (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
 
-           -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
-           WHEN (SELECT COUNT(reservation_id)
-                 FROM cncr_ticket_m
-                 WHERE customer_id = #{userId} AND concert_id = #{concertId}
-                   AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
+                   -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
+                   WHEN (SELECT COUNT(reservation_id)
+                         FROM CNCR_TICKET_M
+                         WHERE customer_id = #{userId}
+                           AND concert_id = #{concertId}
+                           AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
 
-           -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
-           WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 3
-           WHEN NOW() >= (SELECT cncr_cancel_date FROM tck_concert_m WHERE concert_id = #{concertId}) THEN 3
+                   -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
+                   WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+                   WHEN NOW() >= (SELECT cncr_cancel_date FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
 
-           -- 모든 조건이 만족하는 경우
-           ELSE 0
-           END
+                   -- 모든 조건이 만족하는 경우
+                   ELSE 0
+                   END
     </select>
 
 

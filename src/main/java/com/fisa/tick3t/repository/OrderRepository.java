@@ -19,6 +19,7 @@ public interface OrderRepository {
     int selectOrderNum(@Param("queryStringDto") QueryStringDto queryStringDto, @Param("userId") int userId);
 
     void selectSeat(ReservationDto ReservationDto);
+    int selectTicketId(@Param("userId") int userId, @Param("concertId") int concertId);
 
     int cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
     void cancelOrders();
