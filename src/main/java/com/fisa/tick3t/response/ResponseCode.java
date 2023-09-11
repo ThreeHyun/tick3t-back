@@ -24,7 +24,7 @@ public enum ResponseCode {
     NON_EXISTENT_USER("5221", "해당하는 사용자가 존재하지 않습니다."),
     NON_EXISTENT_CONCERT("3221", "해당하는 공연이 존재하지 않습니다."),
     NON_EXISTENT_FANDOM("5421", "해당하는 팬덤이 존재하지 않습니다."),
-    NOT_CONCERT_START_TIME("6001", "공연 예매 시작 시간이 아닙니다."),
+    NOT_CONCERT_RESERVATION_TIME("6001", "공연 예매 시간이 아닙니다."),
     UNAUTHORIZED_FAN("6002", "팬클럽 인증을 받지 못한 경우 예매할 수 없습니다."),
     EXCEED_TICKET_LIMIT("6003", "1인 1매만 예매 가능합니다."),
     NON_EXISTENT_SEAT("6421", "잔여석이 존재하지 않습니다."),

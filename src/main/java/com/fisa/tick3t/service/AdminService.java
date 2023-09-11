@@ -28,7 +28,7 @@ public class AdminService {
     private final UtilFunction util;
 
     // 5.1 [admin/user] 사용자 조회
-    public ResponseDto<?> selectUsers(QueryStringDto queryStringDto, PageInfo pageInfo) {
+    public ResponseDto<?> selectUsers(QueryStringDto queryStringDto, PageInfo pageInfo) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // 검색된 유저수
@@ -48,8 +48,7 @@ public class AdminService {
             responseDto.setData(userPageDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
-            log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw new CustomException(ResponseCode.NO_DATA);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -58,7 +57,7 @@ public class AdminService {
     }
 
     // 5.2 [admin/user/{ID}] 사용자 상세조회
-    public ResponseDto<?> selectUserById(int userId) {
+    public ResponseDto<?> selectUserById(int userId) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // 유저 조회
@@ -72,8 +71,7 @@ public class AdminService {
             responseDto.setData(userDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
-            log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw new CustomException(ResponseCode.NON_EXISTENT_USER);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -120,7 +118,7 @@ public class AdminService {
     }
 
     // 5.4 [/admin/fan/{fanCd}] 대시보드 팬덤 위젯
-    public ResponseDto<?> dashboardFanId(String fanCd) {
+    public ResponseDto<?> dashboardFanId(String fanCd) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // joinUser, WithdrawUser, weekUser 받아오기
@@ -136,8 +134,7 @@ public class AdminService {
             responseDto.setData(fanCountDto);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
-            log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw new CustomException(ResponseCode.NON_EXISTENT_FANDOM);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);

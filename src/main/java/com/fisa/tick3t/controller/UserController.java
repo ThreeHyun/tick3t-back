@@ -28,12 +28,14 @@ public class UserController {
     public ResponseDto<?> signup(@RequestBody User user) throws CustomException {
         String userPwd = user.getUserPwd();
         String userEmail = user.getEmail();
+
         // 파라미터 완전성 검사
         if (userPwd.equals("") || userEmail.equals("") || user.getName().equals("")) {
             log.info("userPwd : " + userPwd);
             log.info("userEmail : " + userEmail);
             log.info("Name : " + user.getName());
-            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            throw new CustomException(ResponseCode.INVALID_DATA);
+            //return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
 
         // 파라미터 유효성 검사
@@ -42,12 +44,13 @@ public class UserController {
             log.info("이메일 형식이 일치하나요? :" + userEmail);
             log.info("유저 name이 5자를 초과하나요? :" + user.getName());
             throw new CustomException(ResponseCode.INVALID_DATA);
+            //return new ResponseDto<>(ResponseCode.INVALID_DATA);
         }
         return userService.signUp(user);
     }
 
     @PostMapping("/reset-password") // O 메일링 처리하기
-    public ResponseDto<?> reissue(@RequestBody User user){
+    public ResponseDto<?> reissue(@RequestBody User user) throws CustomException {
         String userBirth = user.getBirth();
         String userName = user.getName();
         String userEmail = user.getEmail();
@@ -56,9 +59,11 @@ public class UserController {
             log.info("userEmail : " + userEmail);
             log.info("userName : " + userName);
             log.info("userBirth : " + userBirth);
-            return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
-            //throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+            //return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
+        util.isValidDate(userBirth);
+
         return userService.resetPassword(user);
     }
 
@@ -90,7 +95,7 @@ public class UserController {
         // 파라미터 완전성, 유효성 검사
         if (fanId.length() != 8) {
             log.info("Invalid fanID length: " + fanId.length());
-            throw new CustomException(ResponseCode.INVALID_DATA);
+            return new ResponseDto<>(ResponseCode.INVALID_DATA);
         }
         return userService.changeFanId(userId, fanId);
 }

@@ -16,6 +16,8 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.MimeMessage;
 import java.security.SecureRandom;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -178,4 +180,31 @@ public class UtilFunction {
             throw new CustomException(ResponseCode.FAIL);
         }
     }
-}
+
+    public void isValidDate(String date) throws CustomException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setLenient(false); // 이 설정을 통해 유효하지 않은 날짜에 대해 엄격하게 검사합니다.
+        try {
+            sdf.parse(date);
+        }catch (ParseException e) {
+            throw new CustomException(ResponseCode.INVALID_DATA);
+        }
+    }
+    public String isValidParam(String param) throws CustomException {
+        if(param == null || param.equals("")){
+            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+        }
+        if(param.trim().equals("")){
+            throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
+        }
+        return param.trim();
+    }
+
+    public int isValidParam(int param) throws CustomException{
+        if(param <= 0){
+            throw new CustomException(ResponseCode.INVALID_DATA);
+        }else{
+            return param;
+        }
+    }
+    }

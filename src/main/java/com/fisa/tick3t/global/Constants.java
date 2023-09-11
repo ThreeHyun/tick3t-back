@@ -4,6 +4,7 @@ public final class Constants {
 
     // page size
     public static final int concertPageSize = 5;
+    public static final int orderPageSize = 3;
     public static final int userPageSize = 20;
     public static final int logPageSize = 5;
 

@@ -13,7 +13,7 @@
         (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
         (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
         TM.ticket_status_cd as payState,
-        CM.cncr_img_url                                                          as imgUrl
+        CM.cncr_img_url as imgUrl
         FROM CNCR_TICKET_M TM
         JOIN TCK_CONCERT_M CM
         on CM.concert_id = TM.concert_id
@@ -25,21 +25,21 @@
             AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
         </if>
         ORDER BY resv_dtm
-        LIMIT ${@com.fisa.tick3t.global.Constants@concertPageSize} OFFSET #{queryStringDto.offset}
+        LIMIT ${@com.fisa.tick3t.global.Constants@orderPageSize} OFFSET #{queryStringDto.offset}
     </select>
 
 
     <!-- [myorder/id 내 예매내역 상세 조회 -->
     <select id="selectOrder" parameterType="Map" resultType="OrderDto">
-        SELECT TM.reservation_id                                                       as ticketId,
-               CM.concert_id                                                           as concertId,
-               CM.cncr_title                                                           as title,
-               (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as location,
+        SELECT TM.reservation_id                                                        as ticketId,
+               CM.concert_id                                                            as concertId,
+               CM.cncr_title                                                            as title,
+               (select hall_loc from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id)  as location,
                (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
-               CM.cncr_dtm                                                             as datetime,
-               TM.seat_no                                                              as seat,
+               CM.cncr_dtm                                                              as datetime,
+               TM.seat_no                                                               as seat,
                TM.ticket_price                                                          as price,
-               CM.cncr_cancel_date                                                     as cancelDate,
+               CM.cncr_cancel_date                                                      as cancelDate,
                TM.ticket_status_cd                                                      as payState,
                TM.pay_dtm                                                               as payDtm,
                CM.cncr_img_url                                                          as imgUrl
@@ -63,23 +63,23 @@
     <update id="cancelOrder" parameterType="Map">
         UPDATE CNCR_TICKET_M
         SET ticket_status_cd =
-            <choose>
-                <when test="payState = 0">
-                    2
-                </when>
-                <otherwise>
-                    3
-                </otherwise>
-            </choose>
+        <choose>
+            <when test="payState = 0">
+                2
+            </when>
+            <otherwise>
+                3
+            </otherwise>
+        </choose>
         WHERE customer_id = #{userId}
-          AND reservation_id = #{ticketId}
+        AND reservation_id = #{ticketId}
     </update>
 
     <update id="cancelOrders">
         UPDATE CNCR_TICKET_M
         SET ticket_status_cd = 2
         WHERE ticket_status_cd = 0
-        AND pay_dtm &lt; CURRENT_TIMESTAMP
+          AND pay_dtm &lt; CURRENT_TIMESTAMP
     </update>
 
 
@@ -92,83 +92,94 @@
         </if>
         <if test="queryStringDto.word != null">
             AND (SELECT cncr_title
-                 FROM TCK_CONCERT_M
-                 WHERE TCK_CONCERT_M.concert_id = CNCR_TICKET_M.concert_id)
+            FROM TCK_CONCERT_M
+            WHERE TCK_CONCERT_M.concert_id = CNCR_TICKET_M.concert_id)
             LIKE CONCAT('%',#{queryStringDto.word}, '%')
         </if>
     </select>
 
 
-
     <!-- [/order] 조건에 맞을 경우 예매하기 -->
     <insert id="selectSeat" parameterType="ReservationDto">
-        <selectKey resultType="int" keyProperty="canReserve" order="BEFORE" >
+        <selectKey resultType="int" keyProperty="canReserve" order="BEFORE">
             SELECT CASE
-                WHEN COUNT(*) > 0 THEN 1
-                ELSE 0
-                END AS is_valid
-            FROM TCK_CONCERT_M AS tm
-            JOIN TCK_USER_M AS um ON tm.fan_cd = um.fan_cd
-            LEFT JOIN (
-                SELECT *
-                    FROM CNCR_TICKET_M
-                    WHERE ticket_status_cd = 0 OR ticket_status_cd = 1
-                ) AS ctm ON tm.concert_id = ctm.concert_id AND um.user_id = ctm.customer_id
-            WHERE tm.concert_id = #{concertId}
-                AND um.user_id = #{userId}
-                AND ctm.concert_id IS NULL;
+            -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
+            WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
+            (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
+
+            -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
+            WHEN (SELECT COUNT(reservation_id)
+            FROM CNCR_TICKET_M
+            WHERE customer_id = #{userId} AND concert_id = #{concertId}
+            AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
+
+            -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
+            WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+            WHEN NOW() >= (SELECT cncr_cancel_date FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+
+            -- 모든 조건이 만족하는 경우
+            ELSE 0
+            END
         </selectKey>
-        <if test="canReserve == 1">
+        <if test="canReserve == 0">
             INSERT INTO CNCR_TICKET_M (customer_id, concert_id, grade_id, ticket_price, ticket_status_cd,
-                                       seat_no,
-                                       hall_id,
-                                       pay_dtm)
-            VALUES                    (#{userId}, #{concertId}, #{gradeId},#{price}, 0,
-                                      (SELECT MIN(a.seat_no + 1) AS next_available_seat
-                                        FROM (
-                                            SELECT seat_no
-                                            FROM CNCR_TICKET_M
-                                            WHERE concert_id = #{concertId} AND grade_id = #{gradeId}
-                                        UNION ALL
-                                            SELECT 0
-                                        UNION ALL
-                                            SELECT #{totalSeat})
-                                        AS a LEFT JOIN CNCR_TICKET_M AS b ON a.seat_no + 1 = b.seat_no
-                                        AND b.concert_id = #{concertId}
-                                        AND b.grade_id = #{gradeId}
-                                        WHERE a.seat_no &lt; #{totalSeat} AND b.seat_no IS NULL
-                                        LIMIT 1),
+            seat_no,
+            hall_id,
+            pay_dtm)
+            VALUES (#{userId}, #{concertId}, #{gradeId},#{price}, 0,
+            (SELECT MIN(a.seat_no + 1) AS next_available_seat
+            FROM (
+            SELECT seat_no
+            FROM CNCR_TICKET_M
+            WHERE concert_id = #{concertId} AND grade_id = #{gradeId}
+            UNION ALL
+            SELECT 0
+            UNION ALL
+            SELECT #{totalSeat})
+            AS a LEFT JOIN CNCR_TICKET_M AS b ON a.seat_no + 1 = b.seat_no
+            AND b.concert_id = #{concertId}
+            AND b.grade_id = #{gradeId}
+            WHERE a.seat_no &lt; #{totalSeat} AND b.seat_no IS NULL
+            LIMIT 1),
             (select hall_id from TCK_CONCERT_M where TCK_CONCERT_M.concert_id = #{concertId}),
             DATE_ADD(NOW(), INTERVAL 1 DAY))
         </if>
     </insert>
 
-    <!-- [checkOrder] 예매 내역이 있는지 체크-->
-    <select id="checkReservation" parameterType="Map" resultType="int">
-        SELECT count(*)
+    <select id="selectTicketId" parameterType="Map" resultType="int">
+        SELECT reservation_id
         FROM CNCR_TICKET_M
-        WHERE concert_id = #{ticketId} AND customer_id = #{userId}
-        AND (ticket_status_cd = 0 or ticket_status_cd = 1)
+        WHERE customer_id = #{userId}
+          AND concert_id = #{concertId}
+          AND ticket_status_cd = 0;
     </select>
 
-    <!-- [checkOrder] 팬인지  체크-->
-    <select id="checkFanCd" parameterType="Map" resultType="int">
-        SELECT count(tm.fan_cd)
-        FROM TCK_CONCERT_M as tm JOIN TCK_USER_M AS um
-                                  ON tm.fan_cd = um.fan_cd
-        WHERE tm.concert_id = #{ticketId} AND um.user_id = #{userId}
+    <select id="checkOrder" parameterType="Map" resultType="int">
+        SELECT CASE
+                   -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
+                   WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
+                        (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
+
+                   -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
+                   WHEN (SELECT COUNT(reservation_id)
+                         FROM CNCR_TICKET_M
+                         WHERE customer_id = #{userId}
+                           AND concert_id = #{concertId}
+                           AND (ticket_status_cd = 0 OR ticket_status_cd = 1)) > 0 THEN 2
+
+                   -- 세 번째 조건 검사: 현재 시간이 콘서트 시작 시간과 취소 시간 사이인지 확인
+                   WHEN NOW() &lt;= (SELECT cncr_start_dtm FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+                   WHEN NOW() >= (SELECT cncr_cancel_date FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 3
+
+                   -- 모든 조건이 만족하는 경우
+                   ELSE 0
+                   END
     </select>
 
-    <!-- [checkOrder] 팬인지  체크 -->
-    <select id="checkTime">
-        select count(*)
-        From TCK_CONCERT_M
-        where cncr_start_dtm &lt; now() and concert_id = #{concert_id}
-    </select>
 
     <!-- [price] -->
     <select id="priceCheck">
-        (select cncr_price from TCK_CONCERT_M where concert_id = #{concertId})
+            (select cncr_price from TCK_CONCERT_M where concert_id = #{concertId})
     </select>
 
 </mapper>

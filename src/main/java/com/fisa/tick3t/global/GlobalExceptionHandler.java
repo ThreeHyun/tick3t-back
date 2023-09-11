@@ -17,7 +17,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ResponseDto<?> handleCustomException(CustomException e){
-        log.info("이까지도 오나?");
         log.error(e.getMessage());
         ResponseCode responseCode = e.getResponseCode();
         return new ResponseDto<ResponseCode>(responseCode);

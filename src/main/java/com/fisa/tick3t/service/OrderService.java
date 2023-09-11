@@ -13,8 +13,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.fisa.tick3t.global.PayCode.codeToPayDesc;
 
@@ -58,7 +59,7 @@ public class OrderService {
 
             // 반환값이 null이라면 없는 예매내역 결과 반환
             if (orderDto == null) {
-                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION); //400
             }
 
             // 조회 결과 반환
@@ -66,7 +67,7 @@ public class OrderService {
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            responseDto.setCode(e.getResponseCode()); //200
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -118,6 +119,7 @@ public class OrderService {
         return responseDto;
     }
 
+
     @Transactional
     public ResponseDto<?> selectSeat(int userId, ReservationDto reservationDto) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
@@ -125,46 +127,44 @@ public class OrderService {
         try {
             // 랜덤 좌석 선택 후 저장
             orderRepository.selectSeat(reservationDto);
+            int result = orderRepository.selectTicketId(userId, reservationDto.getConcertId());
+            Map<String, Integer> map = new HashMap<>();
+            // 키-값 쌍을 추가
+            map.put("ticketId", result);
+            responseDto.setData(map);
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (DataIntegrityViolationException e) {
             // 잔여석이 존재하지 않을 경우 에러 반환
             log.error(e.getMessage());
             throw new CustomException(ResponseCode.NON_EXISTENT_SEAT);
         } catch (DataAccessException e) {
-            // 팬클럽이 아니라거나 이미 예매 내역이 있을 경우
-            if (e.getCause() instanceof SQLException) {
-                log.error(e.getMessage());
-                throw new CustomException(ResponseCode.EXCEED_TICKET_LIMIT);
-                //todo: 팬클럽 아니다 / 예매내역 있다 둘 다 반환할 error 코드 만들기
-            } else {
-                log.error(e.getMessage());
-                responseDto.setCode(ResponseCode.FAIL);
-            }
+            int result = reservationDto.getCanReserve();
+            setOrderStatus(responseDto, result);
         }  catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
         }
         return responseDto;
-    } //
+    }
 
-    public ResponseDto<?> checkOrder(int userId, int ticketId) {
+    private void setOrderStatus(ResponseDto<Object> responseDto, int result) {
+        if(result == 0){
+            responseDto.setCode(ResponseCode.SUCCESS);
+        } else if (result == 1) {
+            responseDto.setCode(ResponseCode.UNAUTHORIZED_FAN);
+        } else if (result == 2){
+            responseDto.setCode(ResponseCode.EXCEED_TICKET_LIMIT);
+        } else if (result == 3){
+            responseDto.setCode(ResponseCode.NOT_CONCERT_RESERVATION_TIME);
+        }
+    }
+
+
+    public ResponseDto<?> checkOrder(int userId, int concertId) {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
-            int result = orderRepository.checkReservation(userId, ticketId);
-            System.out.println(result);
-            // 이미 예매했을 경우
-            if (result == 1) {
-                responseDto.setCode(ResponseCode.EXCEED_TICKET_LIMIT);
-                return responseDto;
-            }
-            result = orderRepository.checkFanCd(userId, ticketId);
-
-            // 팬클럽 아닐 경우
-            if (result != 1) {
-                responseDto.setCode(ResponseCode.UNAUTHORIZED_FAN);
-                return responseDto;
-            }
-            responseDto.setCode(ResponseCode.SUCCESS);
+            int result = orderRepository.checkOrder(userId, concertId);
+            setOrderStatus(responseDto, result);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);

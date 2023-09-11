@@ -2,9 +2,7 @@ package com.fisa.tick3t.service;
 
 import com.fisa.tick3t.domain.dto.PasswordDto;
 import com.fisa.tick3t.domain.dto.ProfileDto;
-import com.fisa.tick3t.domain.dto.TokenDto;
 import com.fisa.tick3t.global.CustomException;
-import com.fisa.tick3t.jwt.TokenProvider;
 import com.fisa.tick3t.response.ResponseDto;
 import com.fisa.tick3t.domain.dto.UserDto;
 import com.fisa.tick3t.domain.vo.User;
@@ -13,9 +11,6 @@ import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +22,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UtilFunction util;
 
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private final TokenProvider tokenProvider;
 
     // 2.1 [signup] 회원가입 --- 0
     @Transactional
@@ -40,6 +33,7 @@ public class UserService {
         // 중복된 이메일일 경우
         if (userRepository.checkEmail(userEmail) != null) {
             throw new CustomException(ResponseCode.EMAIL_ALREADY_IN_USE);
+            //return new ResponseDto<>(ResponseCode.EMAIL_ALREADY_IN_USE);
         }
 
         // password를 hashing하고 UserDto에 저장
@@ -60,7 +54,7 @@ public class UserService {
 
     // 2.4 [reissue] 비밀번호 재발급 --- 0
     @Transactional
-    public ResponseDto<ResponseCode> resetPassword(User user) {
+    public ResponseDto<ResponseCode> resetPassword(User user) throws CustomException {
         ResponseDto<ResponseCode> responseDto = new ResponseDto<>();
         String userEmail = user.getEmail();
         try {
@@ -87,7 +81,7 @@ public class UserService {
             responseDto.setCode(e.getResponseCode());
         } catch (Exception e) {
             log.error(e.getMessage());
-            responseDto.setCode(ResponseCode.FAIL);
+            throw new CustomException(ResponseCode.FAIL);
         }
         return responseDto;
     }
@@ -137,12 +131,6 @@ public class UserService {
             passwordDto.setUserId(userId);
             // 해싱한 비밀번호 DB에 저장
             userRepository.updatePassword(passwordDto);
-
-            // 새 accessToken 발급 후 반환
-            UsernamePasswordAuthenticationToken authenticationToken = userDto.ToUser(userDto).toAuthentication();
-            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-            TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-            responseDto.setData(tokenDto.getAccessToken());
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
@@ -184,7 +172,7 @@ public class UserService {
         try {
             // 유저 비밀번호 받아오기
             UserDto userDto = userRepository.selectUser(userId);
-            // todo:어떤 url 호출인지, 메인 키워드가 되는 고유 ID, 어떤 유저인지..
+            // todo:어떤 url 호출인지, 메인 키워드가 되는 고유 ID, 어떤 유저인지 로그 남기기
             // 비밀번호 체크하기
             if (!util.checkPassword(password, userDto.getUserPwd())) {
                 throw new CustomException(ResponseCode.MISMATCHED_USER_INFO);

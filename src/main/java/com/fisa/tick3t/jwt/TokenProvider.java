@@ -106,6 +106,10 @@ public class TokenProvider {
         }
     }
 
+    public String auth(String accessToken) {
+        Claims claims = parseClaims(accessToken);
+        return (String) claims.get(Constants.AUTHORITIES_KEY);
+    }
 }
 
 
