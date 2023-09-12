@@ -35,7 +35,6 @@ public class UserController {
             log.info("userEmail : " + userEmail);
             log.info("Name : " + user.getName());
             throw new CustomException(ResponseCode.INVALID_DATA);
-            //return new ResponseDto<>(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
 
         // 파라미터 유효성 검사
@@ -44,7 +43,6 @@ public class UserController {
             log.info("이메일 형식이 일치하나요? :" + userEmail);
             log.info("유저 name이 5자를 초과하나요? :" + user.getName());
             throw new CustomException(ResponseCode.INVALID_DATA);
-            //return new ResponseDto<>(ResponseCode.INVALID_DATA);
         }
         util.isValidDate(user.getBirth());
         return userService.signUp(user);

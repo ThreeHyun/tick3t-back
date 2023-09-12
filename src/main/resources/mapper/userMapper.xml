@@ -68,19 +68,14 @@
     </update>
 
     <!-- 4.4 [/profile/withdraw] 회원 탈퇴 처리 -->
-    <select id="checkOrder" parameterType="int" resultType="int">
+    <select id="checkWithdraw" parameterType="int" resultType="int">
         SELECT count(*)
         FROM CNCR_TICKET_M
         WHERE customer_id = #{userId}
-          AND (
-                    ticket_status_cd = 0
-                OR (
-                                ticket_status_cd = 1
-                            AND now() > (SELECT cncr_dtm
-                                         FROM TCK_CONCERT_M
-                                         WHERE CNCR_TICKET_M.concert_id = TCK_CONCERT_M.concert_id)
-                        )
-            )
+          AND ( ticket_status_cd = 0 OR ticket_status_cd = 1)
+        AND (now() &lt; (SELECT cncr_dtm
+                     FROM TCK_CONCERT_M
+                     WHERE CNCR_TICKET_M.concert_id = TCK_CONCERT_M.concert_id))
     </select>
 
     <update id="withdraw" parameterType="int">
