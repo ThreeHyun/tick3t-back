@@ -28,7 +28,7 @@ public interface UserRepository {
 
     // 4.4 [profile/withdraw] 회원 탈퇴
     void withdraw(int userId);
-    int checkOrder(int userId);
+    int checkWithdraw(int userId);
 
     // 5.1 [admin/user] 회원 리스트 조회(Admin)
     ArrayList<UserDto> selectUsers(QueryStringDto queryStringDto);

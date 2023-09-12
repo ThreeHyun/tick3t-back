@@ -33,7 +33,6 @@ public class UserService {
         // 중복된 이메일일 경우
         if (userRepository.checkEmail(userEmail) != null) {
             throw new CustomException(ResponseCode.EMAIL_ALREADY_IN_USE);
-            //return new ResponseDto<>(ResponseCode.EMAIL_ALREADY_IN_USE);
         }
 
         // password를 hashing하고 UserDto에 저장
@@ -184,7 +183,7 @@ public class UserService {
             }
 
             //예매 정보 체크하기
-            int orderNum = userRepository.checkOrder(userId);
+            int orderNum = userRepository.checkWithdraw(userId);
             if (orderNum != 0) {
                 throw new CustomException(ResponseCode.CANNOT_WITHDRAW);
             }

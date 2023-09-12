@@ -39,7 +39,7 @@
                CM.cncr_dtm                                                              as datetime,
                TM.seat_no                                                               as seat,
                (select grade_name from TCK_HALL_SEAT_M where TCK_HALL_SEAT_M.grade_id = TM.grade_id) as grade,
-               TM.ticket_price                                                          as price,
+               CM.cncr_price                                                         as price,
                CM.cncr_cancel_date                                                      as cancelDate,
                TM.ticket_status_cd                                                      as payState,
                TM.pay_dtm                                                               as payDtm,
@@ -63,17 +63,12 @@
 
     <update id="cancelOrder" parameterType="Map">
         UPDATE CNCR_TICKET_M
-        SET ticket_status_cd =
-        <choose>
-            <when test="payState = 0">
-                2
-            </when>
-            <otherwise>
-                3
-            </otherwise>
-        </choose>
+        SET ticket_status_cd = CASE
+                                   WHEN ticket_status_cd = 0 THEN 2
+                                   ELSE 3
+            END
         WHERE customer_id = #{userId}
-        AND reservation_id = #{ticketId}
+          AND reservation_id = #{ticketId}
     </update>
 
     <select id="cancelOrderTime" parameterType="int" resultType="Integer">
@@ -131,6 +126,7 @@
             -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
             WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
             (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
+            WHEN (SELECT fan_id FROM TCK_USER_M where user_id = #{userId}) = '0' THEN 1
 
             -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
             WHEN (SELECT COUNT(reservation_id)

@@ -155,7 +155,7 @@ public class OrderService {
             log.error(e.getMessage());
             throw new CustomException(ResponseCode.NON_EXISTENT_SEAT);
         } catch (DataAccessException e) {
-            int result = reservationDto.getCanReserve();
+            Integer result = reservationDto.getCanReserve();
             setOrderStatus(responseDto, result);
         }  catch (Exception e) {
             log.error(e.getMessage());
