@@ -42,20 +42,26 @@ public class UtilFunction {
         StringBuilder masking = new StringBuilder();
         char[] chars = email.split("@")[0].toCharArray();
         int count = chars.length;
-        for (char c : chars){
+        if (count <= 2) {
+            return "*".repeat(count) + "@" + email.split("@")[1];
+        }
+        for (char c : chars) {
             if (count == 1 || count == 2) {
                 masking.append(c);
-            }else{
+            } else {
                 masking.append("*");
             }
             count -= 1;
         }
-        return masking +"@"+ email.split("@")[1];
+        return masking + "@" + email.split("@")[1];
     }
 
     public String nameMasking(String name) {
         StringBuilder masking = new StringBuilder();
         char[] chars = name.toCharArray();
+        if (chars.length <= 2) {
+            return "*".repeat(chars.length);
+        }
         int count = 1;
         for (char c : chars) {
             if (count == 1) {
@@ -71,7 +77,6 @@ public class UtilFunction {
         }
         return masking.toString();
     }
-
 
 
     public boolean isValidPassword(String password) {
@@ -132,16 +137,16 @@ public class UtilFunction {
         if (category != null & categories.contains(category)) {
             category = category.trim();
             category = String.valueOf(categories.indexOf(category));
-        }else{
+        } else {
             category = null;
         }
-        if(word != null){
+        if (word != null) {
             word = word.trim();
         }
-        if(page == 0){
+        if (page == 0) {
             page = 1;
         }
-        int offset = (page -1) * pageSize;
+        int offset = (page - 1) * pageSize;
         return new QueryStringDto(category, word, page, offset);
     }
 
@@ -170,8 +175,7 @@ public class UtilFunction {
             String body = "회원님의 임시 비밀번호는 " + password + " 입니다.";
             mimeMessageHelper.setText(body);
             javaMailSender.send(mimeMessage);
-        }
-        catch (SendFailedException e){
+        } catch (SendFailedException e) {
             log.error(e.getMessage());
             throw new CustomException(ResponseCode.UNKNOWN_EMAIL);
         } catch (MessagingException e) {
@@ -186,25 +190,40 @@ public class UtilFunction {
         sdf.setLenient(false); // 이 설정을 통해 유효하지 않은 날짜에 대해 엄격하게 검사합니다.
         try {
             sdf.parse(date);
-        }catch (ParseException e) {
+        } catch (ParseException e) {
             throw new CustomException(ResponseCode.INVALID_DATA);
         }
     }
+
     public String isValidParam(String param) throws CustomException {
-        if(param == null || param.equals("")){
+        if (param == null || param.equals("")) {
             throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
-        if(param.trim().equals("")){
+        if (param.trim().equals("")) {
             throw new CustomException(ResponseCode.MISSING_OR_INVALID_REQUEST);
         }
         return param.trim();
     }
 
-    public int isValidParam(int param) throws CustomException{
-        if(param <= 0){
+    public int isValidParam(int param) throws CustomException {
+        if (param <= 0) {
             throw new CustomException(ResponseCode.INVALID_DATA);
-        }else{
+        } else {
             return param;
         }
     }
+
+    public int discountPrice(String grade, int price) throws CustomException {
+        switch (grade) {
+            case "R":
+                return (int) (price * 0.95);
+            case "S":
+                return (int) (price * 0.85);
+            case "A":
+                return (int) (price * 0.75);
+            default:
+                throw new CustomException(ResponseCode.INVALID_DATA);
+        }
+
     }
+}

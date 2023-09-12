@@ -78,7 +78,7 @@ public class UserService {
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new CustomException(ResponseCode.FAIL);
