@@ -3,6 +3,7 @@ package com.fisa.tick3t.service;
 
 import com.fisa.tick3t.domain.dto.*;
 import com.fisa.tick3t.global.CustomException;
+import com.fisa.tick3t.global.UtilFunction;
 import com.fisa.tick3t.repository.OrderRepository;
 import com.fisa.tick3t.response.ResponseCode;
 import com.fisa.tick3t.response.ResponseDto;
@@ -24,6 +25,8 @@ import static com.fisa.tick3t.global.PayCode.codeToPayDesc;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+
+    private final UtilFunction util;
 
 
     public ResponseDto<?> selectOrders(int userId, QueryStringDto queryStringDto, PageInfo pageInfo) {
@@ -62,6 +65,9 @@ public class OrderService {
                 throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION); //400
             }
 
+            // 가격 차등
+            orderDto.setPrice(util.discountPrice(orderDto.getGrade(), orderDto.getPrice()));
+
             // 조회 결과 반환
             responseDto.setData(orderDto);
             responseDto.setCode(ResponseCode.SUCCESS);
@@ -76,20 +82,24 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseDto<?> payOrder(int userId, int ticketId) {
+    public ResponseDto<?> payOrder(int userId, int ticketId) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
+            Integer timeCheck = orderRepository.payOrderTime(userId, ticketId);
+            if(timeCheck == null || timeCheck == 0){
+                throw new CustomException(ResponseCode.NOT_CONCERT_PAYMENT_TIME);
+            }
             // 예매내역 결제
-            int result = orderRepository.payOrder(userId, ticketId);
+            Integer result = orderRepository.payOrder(userId, ticketId);
 
             // update된 내역이 없다면 존재하지 않는 예매정보 반환
-            if(result == 0){
+            if(result == null || result == 0){
                 throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
             }
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
@@ -98,20 +108,27 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseDto<?> cancelOrder(int userId, int ticketId) {
+    public ResponseDto<?> cancelOrder(int userId, int ticketId) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // 예매내역 취소
-            int result = orderRepository.cancelOrder(userId, ticketId);
+            Integer timeCheck = orderRepository.cancelOrderTime(ticketId);
+            if(timeCheck == null){
+                throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
+            }
+            if(timeCheck == 0){
+                throw new CustomException(ResponseCode.NOT_CONCERT_CANCELLATION_TIME);
+            }
+            Integer result = orderRepository.cancelOrder(userId, ticketId);
 
             // update된 내역이 없다면 존재하지 않는 예매정보 반환
-            if(result == 0){
+            if(result == null || result == 0){
                 throw new CustomException(ResponseCode.NON_EXISTENT_RESERVATION);
             }
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);

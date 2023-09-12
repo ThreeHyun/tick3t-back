@@ -19,12 +19,12 @@ public class ConcertDto {
     int rowNum;
     int concertId;
     String title;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy년 MM월 dd일")
     LocalDateTime date;
     String location;
     String hallName;
     String imgUrl;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy년 MM월 dd일 HH시 mm분")
     LocalDateTime startDate;
     ArrayList<SeatDto> seats;
 }

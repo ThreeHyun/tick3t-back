@@ -25,11 +25,13 @@ public enum ResponseCode {
     NON_EXISTENT_CONCERT("3221", "해당하는 공연이 존재하지 않습니다."),
     NON_EXISTENT_FANDOM("5421", "해당하는 팬덤이 존재하지 않습니다."),
     NOT_CONCERT_RESERVATION_TIME("6001", "공연 예매 시간이 아닙니다."),
+    NOT_CONCERT_CANCELLATION_TIME("6002", "공연 취소 가능 시간이 아닙니다."),
+    NOT_CONCERT_PAYMENT_TIME("6003", "공연 결제 가능 시간이 아닙니다."),
     UNAUTHORIZED_FAN("6002", "팬클럽 인증을 받지 못한 경우 예매할 수 없습니다."),
     EXCEED_TICKET_LIMIT("6003", "1인 1매만 예매 가능합니다."),
     NON_EXISTENT_SEAT("6421", "잔여석이 존재하지 않습니다."),
     NON_EXISTENT_RESERVATION("6421", "존재하지 않는 예매 정보입니다."),
-    JWT_ERROR("8888", "토큰이 필요한 요청입니다." ),
+    JWT_ERROR("8888", "로그인이 필요한 요청입니다." ),
     FAIL("9999", "알 수 없는 에러입니다. 잠시 후 다시 시도해주세요"),
     NO_DATA("9998", "데이터가 존재하지 않습니다");
     // todo: 이 부분을 응답으로 내려줄지 말지.. 고민됩니다.

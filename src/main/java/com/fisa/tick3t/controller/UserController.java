@@ -46,6 +46,7 @@ public class UserController {
             throw new CustomException(ResponseCode.INVALID_DATA);
             //return new ResponseDto<>(ResponseCode.INVALID_DATA);
         }
+        util.isValidDate(user.getBirth());
         return userService.signUp(user);
     }
 

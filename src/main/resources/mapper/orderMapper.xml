@@ -38,6 +38,7 @@
                (select hall_name from TCK_HALL_M where TCK_HALL_M.hall_id = TM.hall_id) as hallName,
                CM.cncr_dtm                                                              as datetime,
                TM.seat_no                                                               as seat,
+               (select grade_name from TCK_HALL_SEAT_M where TCK_HALL_SEAT_M.grade_id = TM.grade_id) as grade,
                TM.ticket_price                                                          as price,
                CM.cncr_cancel_date                                                      as cancelDate,
                TM.ticket_status_cd                                                      as payState,
@@ -74,6 +75,30 @@
         WHERE customer_id = #{userId}
         AND reservation_id = #{ticketId}
     </update>
+
+    <select id="cancelOrderTime" parameterType="int" resultType="Integer">
+        SELECT CASE
+                   WHEN cncr_cancel_date >= NOW() THEN 1
+                   ELSE 0
+                   END
+        FROM TCK_CONCERT_M
+        WHERE concert_id =
+              (SELECT concert_id
+               FROM CNCR_TICKET_M
+               WHERE reservation_id = #{ticket_id})
+    </select>
+
+    <select id="payOrderTime" parameterType="Map" resultType="Integer">
+        SELECT CASE
+                   WHEN pay_dtm >= NOW() THEN 1
+                   ELSE 0
+                   END
+        FROM CNCR_TICKET_M
+        WHERE reservation_id = #{ticketId} AND customer_id = #{userId}
+    </select>
+
+
+
 
     <update id="cancelOrders">
         UPDATE CNCR_TICKET_M

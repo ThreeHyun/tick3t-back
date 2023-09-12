@@ -14,14 +14,17 @@ public interface OrderRepository {
 
     OrderDto selectOrder(@Param("userId") int userId, @Param("concertId") int concertId);
 
-    int payOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    Integer payOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    Integer payOrderTime(@Param("userId") int userId, @Param("ticketId") int ticketId);
 
     int selectOrderNum(@Param("queryStringDto") QueryStringDto queryStringDto, @Param("userId") int userId);
 
     void selectSeat(ReservationDto ReservationDto);
     int selectTicketId(@Param("userId") int userId, @Param("concertId") int concertId);
 
-    int cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
+    Integer cancelOrderTime(int ticketId);
+
+    Integer cancelOrder(@Param("userId") int userId, @Param("ticketId") int ticketId);
     void cancelOrders();
     int checkOrder(int userId, int concertId);
 }

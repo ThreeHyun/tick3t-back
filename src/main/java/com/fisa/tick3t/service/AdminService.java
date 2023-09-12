@@ -158,7 +158,7 @@ public class AdminService {
 
 
     // 5-6 [/admin/ticket/{ID}] 대시보드 판매율 위젯
-    public ResponseDto<?> dashboardConcertId(int concertId) {
+    public ResponseDto<?> dashboardConcertId(int concertId) throws CustomException {
         ResponseDto<Object> responseDto = new ResponseDto<>();
         try {
             // 총 좌석수, 팔린 좌석수, 잔여 좌석 수, 판매율을 받아옵니다.
@@ -174,7 +174,7 @@ public class AdminService {
             responseDto.setCode(ResponseCode.SUCCESS);
         } catch (CustomException e) {
             log.error(e.getMessage());
-            responseDto.setCode(e.getResponseCode());
+            throw new CustomException(ResponseCode.NON_EXISTENT_CONCERT);
         } catch (Exception e) {
             log.error(e.getMessage());
             responseDto.setCode(ResponseCode.FAIL);
