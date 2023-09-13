@@ -80,7 +80,7 @@ public class UtilFunction {
 
 
     public boolean isValidPassword(String password) {
-        String regex = "^(?=.*[a-zA-Z])(?=.*[!@#$%^&*()-_=+\\\\|\\[\\]{};:'\",<.>/?])(?=.*[0-9]).{8,}$";
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,16}$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(password);
         return matcher.matches();
