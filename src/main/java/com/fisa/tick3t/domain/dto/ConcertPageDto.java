@@ -18,7 +18,11 @@ public class ConcertPageDto {
         this.pageNo = pageInfo.getPageNo();
         this.pageSize = pageInfo.getPageSize();
         this.totalElement = pageInfo.getTotalElement();
-        this.totalPage = totalElement / pageSize + 1;
+        if(totalElement % pageSize == 0){
+            this.totalPage = totalElement / pageSize;
+        } else{
+            this.totalPage = totalElement / pageSize + 1;
+        }
         this.concerts = concertDtos;
     }
 }
