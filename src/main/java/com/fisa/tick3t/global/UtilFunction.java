@@ -93,6 +93,16 @@ public class UtilFunction {
         return matcher.matches();
     }
 
+    public void isValidDate(String date) throws CustomException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setLenient(false); // 이 설정을 통해 유효하지 않은 날짜에 대해 엄격하게 검사합니다.
+        try {
+            sdf.parse(date);
+        } catch (ParseException e) {
+            throw new CustomException(ResponseCode.INVALID_DATA);
+        }
+    }
+
     public String hashPassword(String password) {
         return bCryptPasswordEncoder.encode(password);
     }
@@ -185,15 +195,7 @@ public class UtilFunction {
         }
     }
 
-    public void isValidDate(String date) throws CustomException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        sdf.setLenient(false); // 이 설정을 통해 유효하지 않은 날짜에 대해 엄격하게 검사합니다.
-        try {
-            sdf.parse(date);
-        } catch (ParseException e) {
-            throw new CustomException(ResponseCode.INVALID_DATA);
-        }
-    }
+
 
     public String isValidParam(String param) throws CustomException {
         if (param == null || param.equals("")) {

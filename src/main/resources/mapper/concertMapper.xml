@@ -27,7 +27,8 @@
                cm.cncr_start_dtm as startDate,
                hm.hall_loc       as location,
                hm.hall_name      as hallName,
-               cm.cncr_img_url as imgUrl
+               cm.cncr_img_url as imgUrl,
+               cm.calender_url as calUrl
         FROM TCK_CONCERT_M cm
                  JOIN
              TCK_HALL_M hm ON cm.hall_id = hm.hall_id
