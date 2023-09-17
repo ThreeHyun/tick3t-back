@@ -24,6 +24,7 @@ public class ConcertDto {
     String location;
     String hallName;
     String imgUrl;
+    String calUrl;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy년 MM월 dd일 HH시 mm분")
     LocalDateTime startDate;
     ArrayList<SeatDto> seats;

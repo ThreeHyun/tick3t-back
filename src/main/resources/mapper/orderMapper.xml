@@ -24,7 +24,7 @@
         <if test="queryStringDto.word != null">
             AND CM.cncr_title LIKE CONCAT('%',#{queryStringDto.word}, '%')
         </if>
-        ORDER BY resv_dtm
+        ORDER BY resv_dtm ASC
         LIMIT ${@com.fisa.tick3t.global.Constants@orderPageSize} OFFSET #{queryStringDto.offset}
     </select>
 
@@ -180,6 +180,7 @@
                    -- 첫 번째 조건 검사: fan_cd가 일치하는지 확인
                    WHEN (SELECT fan_cd FROM TCK_USER_M WHERE user_id = #{userId}) !=
                         (SELECT fan_cd FROM TCK_CONCERT_M WHERE concert_id = #{concertId}) THEN 1
+                   WHEN (SELECT fan_id FROM TCK_USER_M where user_id = #{userId}) = '0' THEN 1
 
                    -- 두 번째 조건 검사: 예약이 없거나 티켓 상태가 0 또는 1이 아닌지 확인
                    WHEN (SELECT COUNT(reservation_id)
